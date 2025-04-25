@@ -4,14 +4,14 @@
 #include <oik/tmconn/tmconn.h>
 
 
-// TODO задать наименование программы для трассировки
+// TODO Р·Р°РґР°С‚СЊ РЅР°РёРјРµРЅРѕРІР°РЅРёРµ РїСЂРѕРіСЂР°РјРјС‹ РґР»СЏ С‚СЂР°СЃСЃРёСЂРѕРІРєРё
 #define APPLICATION_NAME "TaskExampleC"
 
-// TODO задать период задержки выполнения задачи, в мс
+// TODO Р·Р°РґР°С‚СЊ РїРµСЂРёРѕРґ Р·Р°РґРµСЂР¶РєРё РІС‹РїРѕР»РЅРµРЅРёСЏ Р·Р°РґР°С‡Рё, РІ РјСЃ
 #define WORKER_DELAY 5000
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     char server_host[80];
     char server_tm[80];
     char server_username[80];
@@ -20,74 +20,74 @@ int main(int argc, char* argv[]) {
     HANDLE start_event, stop_event;
     DWORD  tm_cid;
 
-	// подготовка библиотек ОИК
-	cfsInitLibrary(NULL, NULL);
+    // РїРѕРґРіРѕС‚РѕРІРєР° Р±РёР±Р»РёРѕС‚РµРє РћРРљ
+    cfsInitLibrary(NULL, NULL);
 
-	// чтение аргументов для установки связи с сервером ОИК
-    // ./TaskExample сервер_динамических_данных компьютер имя_пользователя пароль
-	// пример запуска: ./TaskExampleC TMS 127.0.0.1 user password
-	// при запуске в качестве внешней задачи параметры указывать не надо
-	strcpy(server_host, "127.0.0.1");
-	strcpy(server_tm, "TMS");
-	strcpy(server_username, "");
-	strcpy(server_password, "");
-	if (argc > 1) {
-		strcpy(server_tm, argv[1]);
-	}
-	if (argc > 2) {
-		strcpy(server_host, argv[2]);
-	}
-	if (argc > 3) {
-		strcpy(server_username, argv[3]);
-	}
-	if (argc > 4) {
-		strcpy(server_password, argv[4]);
-	}
+    // С‡С‚РµРЅРёРµ Р°СЂРіСѓРјРµРЅС‚РѕРІ РґР»В¤ СѓСЃС‚Р°РЅРѕРІРєРё СЃРІСЏР·Рё СЃ СЃРµСЂРІРµСЂРѕРј РћРРљ
+    // ./TaskExampleC СЃРµСЂРІРµСЂ_РґРёРЅР°РјРёС‡РµСЃРєРёС…_РґР°РЅРЅС‹С… РєРѕРјРїСЊСЋС‚РµСЂ РёРјСЏ_РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїР°СЂРѕР»СЊ
+    // РїСЂРёРјРµСЂ Р·Р°РїСѓСЃРєР°: ./TaskExampleC TMS 127.0.0.1 user password
+    // РїСЂРё Р·Р°РїСѓСЃРєРµ РІ РєР°С‡РµСЃС‚РІРµ РІРЅРµС€РЅРµР№ Р·Р°РґР°С‡Рё РїР°СЂР°РјРµС‚СЂС‹ СѓРєР°Р·С‹РІР°С‚СЊ РЅРµ РЅР°РґРѕ
+    strcpy(server_host, "127.0.0.1");
+    strcpy(server_tm, "TMS");
+    strcpy(server_username, "");
+    strcpy(server_password, "");
+    if (argc > 1) {
+        strcpy(server_tm, argv[1]);
+    }
+    if (argc > 2) {
+        strcpy(server_host, argv[2]);
+    }
+    if (argc > 3) {
+        strcpy(server_username, argv[3]);
+    }
+    if (argc > 4) {
+        strcpy(server_password, argv[4]);
+    }
 
-	// подготовка к работе в качестве внешней задачи
-	cfsPmonLocalRegisterProcess(argc, argv, &start_event, &stop_event);
-	pR_SetEvent(start_event);
+    // РїРѕРґРіРѕС‚РѕРІРєР° Рє СЂР°Р±РѕС‚Рµ РІ РєР°С‡РµСЃС‚РІРµ РІРЅРµС€РЅРµР№ Р·Р°РґР°С‡Рё
+    cfsPmonLocalRegisterProcess(argc, argv, &start_event, &stop_event);
+    pR_SetEvent(start_event);
 
-    // установка связи с сервером
-	cfsSetUser(server_username, server_password);
-	tm_cid = tmcConnect(server_host, server_tm, APPLICATION_NAME, NULL, NULL);
+    // СѓСЃС‚Р°РЅРѕРІРєР° СЃРІСЏР·Рё СЃ СЃРµСЂРІРµСЂРѕРј
+    cfsSetUser(server_username, server_password);
+    tm_cid = tmcConnect(server_host, server_tm, APPLICATION_NAME, NULL, NULL);
 
-    // проверка связи
+    // РїСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё
     char server_time[80];
     tmcSystemTime(tm_cid, server_time, NULL);
-	if (tmcIsConnected(tm_cid) == 0) {
-		e_printf("Не удалось соединиться с сервером\n");
+    if (tmcIsConnected(tm_cid) == 0) {
+        e_printf("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕРµРґРёРЅРёС‚СЊСЃСЏ СЃ СЃРµСЂРІРµСЂРѕРј\n");
         return (int) tmcGetLastError();
-	}
-    m_printf("Установлена связь с сервером\n");
+    }
+    m_printf("РЈСЃС‚Р°РЅРѕРІР»РµРЅР° СЃРІСЏР·СЊ СЃ СЃРµСЂРІРµСЂРѕРј\n");
 
-    // обработка действий задачи
-    // TODO написать свою логику
+    // РѕР±СЂР°Р±РѕС‚РєР° РґРµР№СЃС‚РІРёР№ Р·Р°РґР°С‡Рё
+    // TODO РЅР°РїРёСЃР°С‚СЊ СЃРІРѕСЋ Р»РѕРіРёРєСѓ
     do {
-        // выводим в трассировку текущее время сервера
+        // РІС‹РІРѕРґРёРј РІ С‚СЂР°СЃСЃРёСЂРѕРІРєСѓ С‚РµРєСѓС‰РµРµ РІСЂРµРјСЏ СЃРµСЂРІРµСЂР°
         tmcSystemTime(tm_cid, server_time, NULL);
-        d_printf("Время на сервере %s\n", server_time);
+        d_printf("Р’СЂРµРјСЏ РЅР° СЃРµСЂРІРµСЂРµ %s\n", server_time);
 
-        // получаем состояние сигнала #TC20:1:1 и записываем его в соседний #TC20:1:2
+        // РїРѕР»СѓС‡Р°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ СЃРёРіРЅР°Р»Р° #TC20:1:1 Рё Р·Р°РїРёСЃС‹РІР°РµРј РµРіРѕ РІ СЃРѕСЃРµРґРЅРёР№ #TC20:1:2
         short ts_value = tmcStatus(tm_cid, 20, 1, 1);
         tmcSetStatus(tm_cid, 20, 1, 2, (char) ts_value, NULL, 0);
 
-        // получаем значение измерения #TT20:1:1 и записываем его в соседний #TT20:1:2
+        // РїРѕР»СѓС‡Р°РµРј Р·РЅР°С‡РµРЅРёРµ РёР·РјРµСЂРµРЅРёСЏ #TT20:1:1 Рё Р·Р°РїРёСЃС‹РІР°РµРј РµРіРѕ РІ СЃРѕСЃРµРґРЅРёР№ #TT20:1:2
         float ti_value = tmcAnalog(tm_cid, 20, 1, 1, NULL, 0);
         tmcSetAnalog(tm_cid, 20, 1, 2, ti_value, NULL);
 
-        // в цикле выставим всем сигналам из списка #TC20:1:1..10 признак недостоверности
+        // РІ С†РёРєР»Рµ РІС‹СЃС‚Р°РІРёРј РІСЃРµРј СЃРёРіРЅР°Р»Р°Рј РёР· СЃРїРёСЃРєР° #TC20:1:1..10 РїСЂРёР·РЅР°Рє РЅРµРґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё
         for (short i = 1; i <= 10; i++) {
             tmcSetStatusFlags(tm_cid, 20, 1, i, UNRELIABLE_HDW);
         }
 
-        // в цикле снимем всем измерениям из списка #TT20:1:1..5 признак установки вручную
+        // РІ С†РёРєР»Рµ СЃРЅРёРјРµРј РІСЃРµРј РёР·РјРµСЂРµРЅРёСЏРј РёР· СЃРїРёСЃРєР° #TT20:1:1..5 РїСЂРёР·РЅР°Рє СѓСЃС‚Р°РЅРѕРІРєРё РІСЂСѓС‡РЅСѓСЋ
         for (short i = 1; i <= 5; i++) {
             tmcClrAnalogFlags(tm_cid, 20, 1, i, MANUALLY_SET);
         }
     } while (pR_WaitForSingleObject(stop_event, WORKER_DELAY) != pR_WAIT_OBJECT_0);
 
-	tmcDisconnect(tm_cid);
+    tmcDisconnect(tm_cid);
 
-	return 0;
+    return 0;
 }
