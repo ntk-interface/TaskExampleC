@@ -10,7 +10,6 @@ BOOL 	Ipos_PreInit();
 BOOL	Ipos_Init(LPSTR ext_arg);
 VOID	Ipos_CloseHandle(PVOID Handle);
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	Ipos_AllowBindLow();
 INT		Ipos_ForkDaemon();//	=-1 - error, =0 - dameon, >0 - parent
 BOOL	Ipos_KillDaemon(LPSTR name);
 INT		Ipos_fork();
@@ -50,6 +49,7 @@ BOOL	Ipos_GetFileSizeLong(PVOID	Handle, u64* ps);
 
 BOOL	Ipos_SetEOF(HANDLE Handle);
 BOOL	Ipos_GetFileChangeTime(LPSTR fn,FILETIME* pft);
+BOOL	Ipos_GetFileCreationTime(LPSTR fn,FILETIME* pft);
 BOOL	Ipos_SetFileTimes(HANDLE Handle, FILETIME* cr_time, FILETIME* mod_time);
 BOOL	Ipos_DeleteFile(LPSTR fn);
 BOOL	Ipos_FlushFileByName(LPSTR fn);
@@ -91,8 +91,6 @@ PVOID	Ipos_BeginThread(
 );
 HANDLE	Ipos_GetCurrentThread();
 VOID	Ipos_TerminateThread(PVOID Handle,DWORD code);
-CFS_PTHS* Ipos_PerThreadData();
-VOID	Ipos_GetThreadTiming(CFS_PTHS* pths,LPSTR times, DWORD cb_times);
 DWORD	Ipos_ThreadId();
 VOID	Ipos_ResumeThread(PVOID Handle);
 VOID	Ipos_CancelBlockingCall(PVOID Handle);
@@ -134,13 +132,15 @@ DWORD	Ipos_SEN();
 DWORD	Ipos_SLE(DWORD err);
 DWORD	Ipos_GLE();
 ///////////////////////////////////////////////////////////////////////////////////////
-DWORD	Ipos_GetTickCount() ;
+DWORD	Ipos_GetTickCount();
+u64		Ipos_GetTickCount64();
 DWORD	Ipos_GTCSimple();
 VOID	Ipos_Sleep(DWORD ms);
 BOOL	Ipos_GetLocalTime(SYSTEMTIME* pst);
 BOOL	Ipos_GetSystemTime(SYSTEMTIME* pst);
 BOOL	Ipos_SetLocalTime(SYSTEMTIME* pst);
 BOOL	Ipos_SetSystemTime(SYSTEMTIME* pst);
+BOOL	Ipos_SetRtc(DWORD Year,DWORD Month,DWORD Day,DWORD Hour,DWORD Minute,DWORD Second);
 BOOL	Ipos_SystemTimeToFileTime(SYSTEMTIME* st,FILETIME* pft);
 BOOL	Ipos_FileTimeToSystemTime(FILETIME* pft,SYSTEMTIME* st);
 BOOL	Ipos_GetTimeZoneString(LPSTR buf,DWORD cb_buf);
@@ -163,6 +163,9 @@ BOOL	Ipos_FPClassGood(float* f);
 DWORD	Ipos_FPClass(double d);
 
 BOOL	Ipos_GetFreeSpace(LPSTR path,u64* pfsp,u64* ptot);
+
+struct passwd* Ipos_getpwnam(char* name);
+struct passwd* Ipos_getpwuid(uid_t uid);
 ///////////////////////////////////////////////////////////////////////////////////////
 DWORD	Ipos_InterlockedExchange(PDWORD where,DWORD what);
 DWORD	Ipos_InterlockedExchangeAdd(PDWORD where,DWORD what);
@@ -193,7 +196,8 @@ LPSTR Ipos_strlwr(LPSTR s);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOL	Ipos_CheckDaemonRunning(LPSTR s);
-
+BOOL	Ipos_AuthValidator();
+BOOL	Ipos_AuthValidate(LPSTR n,LPSTR p, PBOOL pb_adm);
 ///////////////////////////////////////////////////////////////////////////////////////
 PVOID	Ipos_Do_CreateEvent(BOOL bManualReset,BOOL bInitialState);
 VOID	Ipos_Do_DeleteEvent(PVOID pevt);
@@ -209,6 +213,7 @@ int		Ipos_DoWaitMultipleEvents(PVOID* ppevt, int nCount, int bWaitAll, unsigned 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 extern DWORD _pos_umask;
+extern int IPOS_NUM_CPU;
 
 #ifndef	_FPCLASS_PN
 

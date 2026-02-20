@@ -28,6 +28,7 @@ extern "C" {
 #define	int32_t		__int32
 #define	int64_t		__int64
 
+
 #define socklen_t	INT
 
 #define	INLINE		__inline
@@ -57,7 +58,6 @@ typedef __int32				PTRINT;
 #define R_ASM_EDI	edi
 
 #elif defined  _M_X64
-
 
 typedef unsigned __int64	PTRUINT;
 typedef __int64				PTRINT;
@@ -182,9 +182,11 @@ typedef unsigned __int64	u64;
 #ifdef	IF_PORTCORE
 #define	pR_GetTickCount											Win_GetTickCount
 #define	pR_GetTickCount_										Win_GTCSimple
+#define	pR_GetTickCount64										Win_GetTickCount64
 #else
 #define	pR_GetTickCount											GetTickCount
 #define	pR_GetTickCount_										GetTickCount
+#define	pR_GetTickCount64										Win_GetTickCount64
 #endif
 
 #define	pR_InterlockedExchange									InterlockedExchange
@@ -216,9 +218,12 @@ BOOL	pR_TerminateThread(HANDLE hThread,DWORD excode);
 #define	pR_ProcessId											GetCurrentProcessId
 #define	pR_ThreadId												GetCurrentThreadId
 #define pR_GetCurrentThread										GetCurrentThread
+#define	pR_SetSystemTime										SetSystemTime
+
+#ifndef IF_PORTCORE
 #define	pR_GetLocalTime											GetLocalTime
 #define	pR_GetSystemTime										GetSystemTime
-#define	pR_SetSystemTime										SetSystemTime
+#endif
 
 BOOL cfsSetSystemTime(
 	DWORD Year,
@@ -243,7 +248,6 @@ BOOL cfsSetSystemTime(
 
 #define pR_SuspendThread										SuspendThread										
 #define pR_ResumeThread											ResumeThread
-#define pR_GetThreadTiming                                      Win_GetThreadTiming
 #define pR_GetACP												GetACP
 #define pR_IsAdmin()											Win_IsAdmin(FALSE)
 #define pR_QueryPerformanceFrequency							QueryPerformanceFrequency
@@ -330,12 +334,14 @@ BOOL cfsSetSystemTime(
 #define	pR_FlushFileByHandle									FlushFileBuffers
 #define	pR_FlushFileByName(fn)										
 #define pR_RoughFileTime										Win_RoughFileTime
+#define pR_GetTempPath(cb_path,path)							GetTempPath(cb_path,path)
 #define pR_EnableFpuExceptions									Win_EnableFpuExceptions
 #define	pR_PreInitOSSpecific									WindowsPreInit
 #define	pR_InitOSSpecific										WindowsInit
 #define	pR_ReinitOSSpecific										WindowsReinit
 #define pR_SetTerminationHandlerEvent							Win_SetTerminationHandlerEvent
 #define	pR_GetFileChangeTime									Win_GetFileChangeTime
+#define	pR_GetFileCreationTime									Win_GetFileCreationTime
 #define	pR_SetFileTime											SetFileTime
 #define	pR_CompareFileTime										CompareFileTime
 #define	pR_SystemTimeToFileTime									SystemTimeToFileTime
@@ -422,7 +428,6 @@ FILE_NOTIFY_CHANGE_LAST_WRITE|(b_full?(FILE_NOTIFY_CHANGE_FILE_NAME|FILE_NOTIFY_
 
 
 
-#define pR_AllowBindLow()										TRUE
 #define	pR_ForkDaemon()											(-1)
 #define	pR_KillDaemon(s)										TRUE			
 #define	pR_GetExeName											Win_GetExeName
@@ -450,18 +455,14 @@ FILE_NOTIFY_CHANGE_LAST_WRITE|(b_full?(FILE_NOTIFY_CHANGE_FILE_NAME|FILE_NOTIFY_
 #endif
 #endif
 
-#define pR_MulDiv	MulDiv
-
 //		---------------- Windows specific code
 BOOL	WindowsPreInit();
 BOOL	WindowsInit(LPSTR ext_arg);
 VOID	WindowsReinit();
-#ifdef	CFS_PTHS_DEFINED
-VOID	Win_GetThreadTiming(CFS_PTHS* pths,LPSTR times, DWORD cb_times);
-#endif
 VOID	Win_EnableFpuExceptions();
 VOID	Win_SetTerminationHandlerEvent(HANDLE hEvt);
 BOOL	Win_GetFileChangeTime(LPSTR fn,FILETIME* pft);
+BOOL	Win_GetFileCreationTime(LPSTR fn,FILETIME* pft);
 
 VOID	Win_uxt_attach();
 VOID	Win_uxt_detach();
@@ -482,6 +483,7 @@ BOOL	Win_InitTSC();
 u64		Win_GetTSC();
 u64		Win_TSCF();
 DWORD	Win_GetTickCount();
+u64		Win_GetTickCount64();
 DWORD	Win_GTCSimple();
 LPSTR	Win_GetExeName();
 
@@ -490,11 +492,18 @@ PVOID	Win_CreateMapping(BOOL	wr,	DWORD	size,LPSTR	name,HANDLE	hnd,DWORD offs);
 VOID	Win_FlushMapping(PVOID	p);
 VOID	Win_DeleteMapping(PVOID	p,DWORD size);
 
-#ifdef	IF_PORTCORE
+#ifdef IF_PORTABLE
+#ifndef USE_CFSHARE_DLL
+#define cfsInterlockedRead64		Win_InterlockedRead64
+#define cfsInterlockedExchange64	Win_InterlockedExchange64
+#define cfsInterlockedExchangeAdd64 Win_InterlockedExchangeAdd64
 i64		Win_InterlockedRead64(volatile i64 *target);
 i64		Win_InterlockedExchange64(volatile i64 *target, i64 value);
 i64		Win_InterlockedExchangeAdd64(i64 *target,i64 addend);
-#else
+#endif
+#endif
+
+#ifndef	IF_PORTCORE
 #define pR_IsValidSid IsValidSid
 #define pR_EqualSid EqualSid
 #endif
@@ -562,18 +571,12 @@ VOID _CDECL cfsCharToOemBuff( LPSTR lpszSrc,  LPSTR lpszDst,   DWORD cchDstLengt
 #define	cfsInitTSC				Win_InitTSC
 #define cfsGetTSC				Win_GetTSC
 #define cfsTSCF					Win_TSCF
-#define cfsIsAdmin				Win_IsAdmin
-#define cfsIsRoot(x)				FALSE
 
 #ifndef USE_CFSHARE_DLL
 #define cfsIsService			Win_IsService 
 #endif
 
-#ifdef	IF_PORTCORE
-#define cfsInterlockedRead64		Win_InterlockedRead64
-#define cfsInterlockedExchange64	Win_InterlockedExchange64
-#define cfsInterlockedExchangeAdd64 Win_InterlockedExchangeAdd64
-#endif
+
 
 #define cfsCheckDaemonRunning	Win_CheckDaemonRunning	
 #define	cfsSrvInstallService	Win_InstallService
@@ -581,7 +584,16 @@ VOID _CDECL cfsCharToOemBuff( LPSTR lpszSrc,  LPSTR lpszDst,   DWORD cchDstLengt
 #define	cfsSrvRemoveService		Win_RemoveService
 #define	cfsSrvSvcScript(svcn,descr,exep,bpath)		FALSE
 
-#define	cfsGetSysLimitsStr()	NULL
+BOOL cfsPerfGetProcessTimes(DWORD pid,u64* p_k_time, u64* p_u_time);
+BOOL cfsPerfGetCpuTimes(u64* p_k_time, u64* p_u_time);
+DWORD cfsGetCoresNumber();
+u64 cfsGetHeapUsage();
+u64 cfsGetPhysicalMemorySize();
+DWORD cfsGetBaseClockSpeed();
+DWORD cfsGetMaxClockSpeed();
+
+
+LPSTR	cfsGetSysLimitsStr();
 
 #define	pR_AltBaseRoot		NULL
 ///		-----------------

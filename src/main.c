@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <windows.h>
 #include <oik/portable.h>
 #include <oik/tmconn/tmconn.h>
 
@@ -23,7 +22,7 @@ int main(int argc, char *argv[]) {
     // подготовка библиотек ОИК
     cfsInitLibrary(NULL, NULL);
 
-    // чтение аргументов дл¤ установки связи с сервером ОИК
+    // чтение аргументов для установки связи с сервером ОИК
     // ./TaskExampleC сервер_динамических_данных компьютер имя_пользователя пароль
     // пример запуска: ./TaskExampleC TMS 127.0.0.1 user password
     // при запуске в качестве внешней задачи параметры указывать не надо

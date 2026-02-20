@@ -41,6 +41,8 @@
 
 #define Linux_exe_pfx	"ifpcore_lx_"
 
+#define	OIKSERVER_UNAME	"oikserver"
+#define UIDPID_NAME	"/tmp/Ifpc_server.uidpid"
 
 #if defined __GNUC__ || \
        defined __SUNPRO_C || \
@@ -158,9 +160,14 @@ typedef int64_t			PTRINT;
 #define	FMT_I64	"%ld"
 #define Linux_exe_bits	"64"
 
+
 #else
 #error Cannot define PTRUINT!
 #endif
+
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 8)
+#define USE_NATIVE_INT128
+#endif 
 
 #define OS_EXE_EXT	""
 
@@ -358,6 +365,7 @@ typedef DWORD (WINAPI *LPPROGRESS_ROUTINE)(
     LPVOID lpData
     );
 
+
 #define _ICS(xcs)	Ipos_InitCS(xcs)
 #define _ICS_and_SC(xcs,sc)	Ipos_InitCS(xcs)
 
@@ -497,6 +505,7 @@ typedef struct _TIME_ZONE_INFORMATION {
 #define	pR_SLE													Ipos_SLE
 #define	pR_GetLastError											Ipos_GLE
 #define	pR_GetTickCount											Ipos_GetTickCount
+#define	pR_GetTickCount64										Ipos_GetTickCount64
 #define	pR_GetTickCount_										Ipos_GTCSimple
 #define	pR_InterlockedExchange									Ipos_InterlockedExchange
 #define	pR_InterlockedExchangeAdd								Ipos_InterlockedExchangeAdd
@@ -526,10 +535,14 @@ typedef struct _TIME_ZONE_INFORMATION {
 #define pR_CheckProcParent										Ipos_CheckProcParent
 #define pR_GetCurrentThread										Ipos_GetCurrentThread
 #define	pR_ThreadId												Ipos_ThreadId
-#define	pR_GetLocalTime											Ipos_GetLocalTime
-#define	pR_GetSystemTime										Ipos_GetSystemTime
 #define pR_SetLocalTime                                         Ipos_SetLocalTime
 #define pR_SetSystemTime                                        Ipos_SetSystemTime
+
+#ifndef IF_PORTCORE
+#define	pR_GetLocalTime											Ipos_GetLocalTime
+#define	pR_GetSystemTime										Ipos_GetSystemTime
+#endif
+
 
 BOOL cfsSetSystemTime(
 	DWORD Year,
@@ -590,6 +603,7 @@ BOOL cfsSetSystemTime(
 #define pR_MoveFileWithProgress(f1,f2,rtn,rtndata,rep,through)	Ipos_MoveFileWithProgress(f1,f2,rtn,rtndata,rep,through)
 #define pR_GetFileAttributes									Ipos_GetFileAttributes
 #define	pR_GetFileChangeTime									Ipos_GetFileChangeTime
+#define	pR_GetFileCreationTime									Ipos_GetFileCreationTime
 #define	pR_DeleteFile											Ipos_DeleteFile
 #define pR_GetFreeSpace											Ipos_GetFreeSpace
 //
@@ -608,6 +622,8 @@ BOOL cfsSetSystemTime(
 #define pR_GetFilePointerLong									Ipos_GetFilePointerLong
 #define	pR_SetEOF												Ipos_SetEOF
 #define	pR_FlushFileByHandle									Ipos_FlushFileByHandle
+
+#define pR_GetTempPath											Linux_GetTempPath
 
 #define pR_EnableFpuExceptions									Ipos_EnableFpuExceptions
 #define pR_ResumeThread											Ipos_ResumeThread
@@ -647,14 +663,13 @@ BOOL cfsSetSystemTime(
 
 
 
-#define pR_AllowBindLow()										Ipos_AllowBindLow()
 #define	pR_ForkDaemon()											Ipos_ForkDaemon()
 #define	pR_KillDaemon(s)										Ipos_KillDaemon(s)
 
 #define pR_GetBuildUT											Linux_BuildDateUT
 #define pR_GetBuildDate											Linux_BuildDate
 #define pR_GetUptime											Linux_GetUptime
-#define pR_GetThreadTiming                                      Ipos_GetThreadTiming
+
 
 #define pR_GetUserPath											Ipos_GetUserPath
 
@@ -714,10 +729,11 @@ DWORD	OsGetMACAddresses(PBYTE p_macs,DWORD c_macs);
 
 #define	pR_ODS(x)	printf("ODS: %s",x)
 
-#define pR_MulDiv(m1,m2,d)		((DWORD)((((u64)(m1))*((u64)(m2)))/((u64)(d))))
-
 //		---------------- Cfshare functions
 #define CFT_HANDLE	PVOID
+
+//		----------------
+#include "posix/pos_handle.h"
 
 #include "ifp_cfs.h"
 
@@ -728,8 +744,6 @@ DWORD	OsGetMACAddresses(PBYTE p_macs,DWORD c_macs);
 //		---------------- INI functions
 #include "ifp_ini.h"
 
-//		----------------
-#include "posix/pos_handle.h"
 
 
 //		----------------
@@ -746,6 +760,8 @@ extern "C" {
 extern	int Linux_Ver_Major;
 extern	int Linux_Ver_Minor;
 extern	int Linux_Ver_Release;
+
+extern	DWORD	OikserverUid;
 
 BOOL			LinuxInit(LPSTR ext_arg);
 BOOL			LinuxPreInit();
@@ -765,6 +781,8 @@ VOID	Linux_DeleteMapping(PVOID	p,DWORD size);
 BOOL	Linux_GetUptime(u64* p_uptime);
 BOOL	Linux_GetComputerName(LPSTR szComputerName,DWORD dwComputerName);
 
+DWORD	Linux_GetTempPath(DWORD cb_path,LPSTR path);
+
 HANDLE 	Linux_LnotStart(LPSTR dir);
 BOOL 	Linux_LnotStop(HANDLE hEvt);
 
@@ -778,13 +796,10 @@ VOID	_CDECL cfsOemToCharBuff( LPSTR lpszSrc,  LPSTR lpszDst,   DWORD cchDstLengt
 VOID	_CDECL cfsCharToOemBuff( LPSTR lpszSrc,  LPSTR lpszDst,   DWORD cchDstLength );
 
 
-#define cfsPerThreadData		Ipos_PerThreadData
 #define cfsBeginThreadEx		Ipos_BeginThread
 #define	cfsInitTSC				Ipos_InitTSC
 #define cfsGetTSC				Ipos_GetTSC
 #define cfsTSCF					Ipos_TSCF
-#define cfsIsAdmin(x)			pR_IsAdmin()
-BOOL	cfsIsRoot(LPSTR name);
 BOOL	cfsIsForked();
 
 #define	cfsSectorSize			Ipos_SectorSize
@@ -794,6 +809,12 @@ BOOL	cfsIsForked();
 #define	cfsSrvRemoveService	    Linux_RemoveService
 #define	cfsSrvCommandService	Linux_CommandService
 #define	cfsSrvSvcScript			Linux_SvcScript
+
+BOOL	cfsPerfGetProcessTimes(DWORD pid,u64* p_k_time, u64* p_u_time);
+BOOL	cfsPerfGetCpuTimes(u64* p_k_time, u64* p_u_time);
+#define cfsGetCoresNumber() ((DWORD)IPOS_NUM_CPU)
+u64		cfsGetHeapUsage();
+u64		cfsGetPhysicalMemorySize();
 
 LPSTR	cfsGetSysLimitsStr();
 

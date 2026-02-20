@@ -17,9 +17,6 @@ extern "C" {
 #include <time.h>
 
 //-----------------
-#define	IF_PC_VER_MAJ	3
-#define IF_PC_VER_MIN	0
-#define IF_PC_VER	((IF_PC_VER_MAJ<<16)|IF_PC_VER_MIN)
 
 #ifdef	IF_PORTCORE
 
@@ -39,7 +36,9 @@ extern unsigned int _trademark;
 
 #ifdef	IF_PORTABLE	//should be definded for particular os support
 
-
+#ifndef pR__DATE__
+#define pR__DATE__ __DATE__
+#endif
 
 ////////////////	WIN32
 #ifdef	_WIN32
@@ -60,7 +59,7 @@ extern unsigned int _trademark;
 //--------------------------------------
 
 ////////////////	LINUX
-#ifdef __gnu_linux__
+#if (defined __gnu_linux__) || (defined LINUX)
 #include "portable/ifp_linux.h"
 #define IF_ARCH		1
 #endif		//		LINUX
@@ -86,7 +85,8 @@ extern unsigned int _trademark;
 #endif	// IF_ARCH
 
 
-
+///////////////////
+//#include "portable/pc_int128.h"
 ///////////////////			ENDIAN
 
 WORD pR_swap2(WORD x);
@@ -185,6 +185,8 @@ void	pR_PutDouble(BOOL end_mis,PVOID p,double dbl);
 //float	pR_TakeFloatFun(PVOID p);
 //double	pR_TakeDoubleFun(PVOID p);
 
+#define pR_MulDiv(m1,m2,d)		((DWORD)((((u64)(m1))*((u64)(m2)))/((u64)(d))))
+
 #if IF_PTRSIZE==4
 
 #define pR_allocptrid(ptr)	((DWORD)(ptr))
@@ -231,12 +233,12 @@ DWORD pR_msize( void *memblock);
 
 #define pR_alloca	alloca
 
-#ifdef IF_WINDOWS
+/*#ifdef IF_WINDOWS
 #if IF_PTRSIZE>=8
 #undef pR_alloca
 #define pR_alloca _malloca
 #endif
-#endif
+#endif*/
 
 //-------------------------------
 #ifdef __cplusplus

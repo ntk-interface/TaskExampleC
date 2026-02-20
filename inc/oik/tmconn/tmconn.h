@@ -31,10 +31,10 @@ extern "C" {
 
 
 
-#define SUCCESS 1                 // РЈСЃРїРµС€РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ С„СѓРЅРєС†РёРё
-#define FAILURE 0                 // РћС€РёР±РєР° РїСЂРё РѕР±СЂР°Р±РѕС‚РєРµ Р·Р°РїСЂРѕСЃР°
+#define SUCCESS 1                 // Успешное завершение функции
+#define FAILURE 0                 // Ошибка при обработке запроса
 
-/*------------- РћРїСЂРµРґРµР»РµРЅРёСЏ С„Р»Р°РіРѕРІ РґРѕСЃС‚СѓРїР° -----------------*/
+/*------------- Определения флагов доступа -----------------*/
 
 #define TMS_ACCESS_TM_READ			0x00000001
 #define TMS_ACCESS_STATUS_CHANGE	0x00000002
@@ -49,6 +49,7 @@ extern "C" {
 #define TMS_ACCESS_TOB_CHANGE		0x00000400
 #define TMS_ACCESS_BACKUP			0x00000800
 #define TMS_ACCESS_TM_SUBS			0x00001000
+#define TMS_ACCESS_RETPUB			0x00002000
 
 #define TMS_GENERIC_READ	TMS_ACCESS_TM_READ
 
@@ -57,7 +58,7 @@ extern "C" {
 
 #define TMS_GENERIC_EXECUTE	TMS_GENERIC_READ
 
-#define TMS_GENERIC_ALL (TMS_GENERIC_WRITE|TMS_ACCESS_TELECONTROL|TMS_ACCESS_TM_SOURCE|TMS_ACCESS_TOB_CHANGE|TMS_ACCESS_BACKUP|TMS_ACCESS_TM_SUBS)
+#define TMS_GENERIC_ALL (TMS_GENERIC_WRITE|TMS_ACCESS_TELECONTROL|TMS_ACCESS_TM_SOURCE|TMS_ACCESS_TOB_CHANGE|TMS_ACCESS_BACKUP|TMS_ACCESS_TM_SUBS|TMS_ACCESS_RETPUB)
 
 // -----------------------
 #define RBS_ACCESS_READ				0x00000001
@@ -69,28 +70,28 @@ extern "C" {
 #define RBS_GENERIC_EXECUTE			RBS_GENERIC_READ
 #define RBS_GENERIC_ALL				(RBS_ACCESS_READ|RBS_ACCESS_WRITE|RBS_ACCESS_BACKUP)
 
-/*------------- РћРїСЂРµРґРµР»РµРЅРёСЏ С„Р»Р°РіРѕРІ С‚РµР»РµРїР°СЂР°РјРµС‚СЂРѕРІ -----------------*/
-#define UNRELIABLE_HDW     0x0001   // РќРµРґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚СЊ Р°РїРїР°СЂР°С‚РЅР°СЏ
-#define UNRELIABLE_MANU    0x0002   // РќРµРґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚СЊ РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
-#define REQUESTED          0x0004   // РРґРµС‚ РѕРїСЂРѕСЃ
-#define MANUALLY_SET       0x0008   // РЈСЃС‚Р°РЅРѕРІР»РµРЅРѕ РІСЂСѓС‡РЅСѓСЋ
-#define LEVEL_A            0x0010   // РЎСЂР°Р±РѕС‚Р°Р»Р° СѓСЃС‚Р°РІРєР° РїРµСЂРІРѕРіРѕ СѓСЂРѕРІРЅСЏ
-#define LEVEL_B            0x0020   // ------- " ------- РІС‚РѕСЂРѕРіРѕ СѓСЂРѕРІРЅСЏ
-#define LEVEL_C            0x0040   // ------- " ------- С‚СЂРµС‚СЊРµРіРѕ СѓСЂРѕРІРЅСЏ
-#define LEVEL_D            0x0080   // ------- " ------- С‡РµС‚РІРµСЂС‚РѕРіРѕ СѓСЂРѕРІРЅСЏ
-#define INVERTED           0x0100   // РўРЎ РёРЅРІРµСЂС‚РёСЂСѓРµС‚СЃСЏ РїСЂРё Р·Р°РЅРµСЃРµРЅ
-#define RESCHANNEL         0x0200	// Р”Р°РЅРЅС‹Рµ РІР·СЏС‚С‹ СЃ СЂРµР·РµСЂРІРЅРѕРіРѕ РєР°РЅР°Р»Р°
-#define TMCTRL_PRESENT     0x0400	// Р•СЃС‚СЊ РєРѕРјР°РЅРґР° - volatile [РўРЎ]
-#define HAS_ALARM          0x0400	// Р•СЃС‚СЊ СѓСЃС‚Р°РІРєРё - volatile [РўРРў]
+/*------------- Определения флагов телепараметров -----------------*/
+#define UNRELIABLE_HDW     0x0001   // Недостоверность аппаратная
+#define UNRELIABLE_MANU    0x0002   // Недостоверность от пользователя
+#define REQUESTED          0x0004   // Идет опрос
+#define MANUALLY_SET       0x0008   // Установлено вручную
+#define LEVEL_A            0x0010   // Сработала уставка первого уровня
+#define LEVEL_B            0x0020   // ------- " ------- второго уровня
+#define LEVEL_C            0x0040   // ------- " ------- третьего уровня
+#define LEVEL_D            0x0080   // ------- " ------- четвертого уровня
+#define INVERTED           0x0100   // ТС инвертируется при занесен
+#define RESCHANNEL         0x0200	// Данные взяты с резервного канала
+#define TMCTRL_PRESENT     0x0400	// Есть команда - volatile [ТС]
+#define HAS_ALARM          0x0400	// Есть уставки - volatile [ТИТ]
 
-#define STATUS_CLASS_APS   0x0800	// РђРџРЎ [РўРЎ]
-#define AP_UNDER_CONTROL   0x0800   // Р•СЃС‚СЊ СѓРїСЂР°РІР»РµРЅРёРµ/СЂРµРіСѓР»РёСЂРѕРІР°РЅРёРµ [РўРРў]
-#define TMSTREAMING        0x1000	// РџРµСЂРµРґР°РІР°С‚СЊ СЃРѕ РІСЂРµРјРµРЅРµРј
-#define F_ABNORMAL         0x2000   // РћС‚Р»РёС‡РЅРѕ РѕС‚ РЅРѕСЂРјР°Р»СЊРЅРѕРіРѕ
-#define F_UNACKED          0x4000   // РќРµСЃРєРІРёС‚РёСЂРѕРІР°РЅ
+#define STATUS_CLASS_APS   0x0800	// АПС [ТС]
+#define AP_UNDER_CONTROL   0x0800   // Есть управление/регулирование [ТИТ]
+#define TMSTREAMING        0x1000	// Передавать со временем
+#define F_ABNORMAL         0x2000   // Отлично от нормального
+#define F_UNACKED          0x4000   // Несквитирован
 #define F_IV               0x8000   // 101 IV
 
-#define F_INTERIM          0x02000000   // РџСЂРѕРјРµР¶СѓС‚РѕС‡РЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ
+#define F_INTERIM          0x02000000   // Промежуточное состояние
 
 #define SF_CONFIG			 0x40000000
 #define SF_INIT				 0x80000000
@@ -100,44 +101,39 @@ extern "C" {
 
 
 // S2
-#define S2_BREAK			 0x0001		// СЂР°Р·СЂС‹РІ?
-#define	S2_MALFUNCTION		 0x0002		// РЅРµРёСЃРїСЂР°РІРЅРѕСЃС‚СЊ РґР°С‚С‡РёРєРѕРІ?
+#define S2_BREAK			 0x0001		// разрыв?
+#define	S2_MALFUNCTION		 0x0002		// неисправность датчиков?
 #define	S2_INTERIM			 0x4000
 
-// S2	РЎС‚Р°СЂС€РёР№ Р±РёС‚
+// S2	Старший бит
 #define S2_FLAGSONLY		 0x8000
 
 ////////////////////// TELEMETRY FLAGS 2 (WORD)
-#define FL2_OUTDATED			0x0001		// СѓСЃС‚Р°СЂРµР» РїРѕ РІСЂРµРјРµРЅРё
-#define FL2_MANRETR				0x0002		// СЂРµС‚СЂР°РЅСЃР»СЏС†РёСЏ СЂСѓС‡, СѓСЃС‚Р°РѕРЅРІРѕРє РІ РЎРЎРџР
-#define FL2_MANBLOCK			0x0004		// СЂРµС‚СЂР°РЅСЃР»СЏС†РёСЏ Р±Р»РѕРєРёСЂРѕРІРѕРє РІ РЎРЎРџР
-#define	FL2_IN_TM				0x0008		// РїСЂРёРЅРёРјР°Р»СЃСЏ РѕС‚ РўРњ
-#define	FL2_IN_USER				0x0010		// РїСЂРёРЅРёРјР°Р»СЃСЏ РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
-#define	FL2_IN_CALC				0x0020		// РїСЂРёРЅРёРјР°Р»СЃСЏ РѕС‚ РґРѕСЂР°СЃС‡РµС‚Р°
-#define	FL2_IN_TMS				0x0040		// СѓСЃС‚Р°РЅР°РІР»РёРІР°Р»СЃСЏ СЃР°РјРёРј СЃРµСЂРІРµСЂРѕРј
-#define	FL2_IN_EXPR				0x0080		// РїСЂРёСЃРІР°РёРІР°Р»СЃСЏ С‡-Р· РІС‹СЂР°Р¶РµРЅРёРµ
-#define FL2_NONINTR_TC			0x0100		// РІРѕР·РјРѕР¶РЅРѕ РўРЈ РѕС‚ Р°РІС‚РѕРїСЂРѕС†РµСЃСЃР°
-#define FL2_CTLBLOCK			0x0200		// РўРЈ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ
-#define FL2_REG_SET				0x0400		// РўРµР»РµСЂРµРіСѓР»РёСЂРѕРІР°РЅРёРµ РўРР СѓСЃС‚Р°РЅРѕРІРєРѕР№
-#define FL2_REG_INC				0x0800		// РўРµР»РµСЂРµРіСѓР»РёСЂРѕРІР°РЅРёРµ РўРР РёРЅРєСЂРµРјРµРЅС‚Р°РјРё
-#define FL2_ACTL				0x1000		// Р’С‹С‚РѕР»РЅСЏРµС‚СЃСЏ Р°СЃРёРЅС…СЂРѕРЅРЅРѕРµ РўРЈ
-#define FL2_JITTER				0x2000		// РЎРёСЃС‚РµРјР°С‚РёС‡РµСЃРєРёР№ РґСЂРµР±РµР·Рі
+#define FL2_OUTDATED			0x0001		// устарел по времени
+#define FL2_MANRETR				0x0002		// ретрансляция руч, устаонвок в ССПИ
+#define FL2_MANBLOCK			0x0004		// ретрансляция блокировок в ССПИ
+#define FL2_NONINTR_TC			0x0100		// возможно ТУ от автопроцесса
+#define FL2_CTLBLOCK			0x0200		// ТУ заблокировано
+//#define FL2_REG_SET				0x0400		// Телерегулирование ТИИ установкой
+//#define FL2_REG_INC				0x0800		// Телерегулирование ТИИ инкрементами
+#define FL2_ACTL				0x1000		// Вытолняется асинхронное ТУ
+#define FL2_JITTER				0x2000		// Систематический дребезг
 
 
-/*------------------------ РўРёРїС‹ СЃРѕР±С‹С‚РёР№ ---------------------------*/
-#define evSTATUS_CHANGE      0x0001   // РўРµР»РµСЃРёРіРЅР°Р»
-#define evALARM              0x0002   // РЈСЃС‚Р°РІРєР° РўРРў
-#define evCONTROL            0x0004   // РўРµР»РµСѓРїСЂР°РІР»РµРЅРёРµ
+/*------------------------ Типы событий ---------------------------*/
+#define evSTATUS_CHANGE      0x0001   // Телесигнал
+#define evALARM              0x0002   // Уставка ТИТ
+#define evCONTROL            0x0004   // Телеуправление
 #define evACKNOWLEDGE		 0x0008
-//#define evMANUAL_CONTROL     0x0008   // РўРЈ СЃРѕ С‰РёС‚Р°
-#define evMANUAL_STATUS_SET  0x0010   // РћР±РѕР·РЅР°С‡РµРЅРёРµ РїРѕР»РѕР¶РµРЅРёСЏ РўРЎ
-#define evMANUAL_ANALOG_SET  0x0020   // Р СѓС‡РЅР°СЏ СѓСЃС‚Р°РЅРѕРІРєР° РўРРў
-#define evFLAGS_CHANGE       0x0040   // РР·РјРµРЅРµРЅРёРµ С„Р»Р°РіРѕРІ РўРџ
+//#define evMANUAL_CONTROL     0x0008   // ТУ со щита
+#define evMANUAL_STATUS_SET  0x0010   // Обозначение положения ТС
+#define evMANUAL_ANALOG_SET  0x0020   // Ручная установка ТИТ
+#define evFLAGS_CHANGE       0x0040   // Изменение флагов ТП
 #define evREGULATION         0x0080
 
-#define evEXT_LNK			 0x2000	  // РЎР»СѓР¶РµР±РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ - РЅРµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ!
-#define evEXT_FILE_LNK		 0x4000	  // РЎР»СѓР¶РµР±РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ - РЅРµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ!
-#define evEXTENDED			 0x8000	  // Р Р°СЃС€РёСЂРµРЅРЅС‹Р№ С„РѕСЂРјР°С‚
+#define evEXT_LNK			 0x2000	  // Служебное значение - не использовать!
+#define evEXT_FILE_LNK		 0x4000	  // Служебное значение - не использовать!
+#define evEXTENDED			 0x8000	  // Расширенный формат
 #define evMASK_EXTENDED		 0xe000
 
 #define EXTEVL_KIND_STRBIN		0x100
@@ -181,6 +177,8 @@ extern "C" {
 #define TMS_CAPS_LOGAUDIT			8
 #define TMS_CAPS_RESVALEX			9
 #define TMS_CAPS_MICROSERIES		10
+#define TMS_CAPS_TQIBIGCOND			11
+#define TMS_CAPS_EVLEXT2			12
 
 #define TMS_CAPS_CFGT				120
 #define TMS_CAPS_CNT				127
@@ -255,10 +253,8 @@ extern "C" {
 #define TMS_TR_DEBUG		0x0004
 #define TMS_TR_TM_IN		0x0008
 #define TMS_TR_TM_OUT		0x0010
-////////////////////////////////
 
-#define DNT_DRIVER_ETHERNET	1
-#define DNT_DRIVER_COM		2
+//////////////////////////////// Backup constants below are defined also in some c files, don't redefine values
 
 #ifndef TMS_BACKUP_
 #define TMS_BACKUP_
@@ -268,9 +264,8 @@ extern "C" {
 #define TMS_BACKUP_ALARMS	8
 #define TMS_BACKUP_RETRO	0x10
 #define TMS_BACKUP_SECURITY	0x20
+#define TMS_BACKUP_AGG		0x40
 #endif
-
-#define TMV_MAX_CLASSES		256
 
 #ifndef RBS_BACKUP_
 #define RBS_BACKUP_
@@ -278,6 +273,10 @@ extern "C" {
 #define RBS_BACKUP_SECURITY 2
 #endif
 
+////////////////////////////////
+#define TMV_MAX_CLASSES		256
+
+////////////////////////////////
 #define DGM_DATASOURCE 			0x00000001
 #define DGM_TRACEALL			0x00000002
 #define DGM_TRACEDEF			0x00000004
@@ -292,8 +291,10 @@ extern "C" {
 #define	DGM_TOB_RETRANS			0x00000800
 #define DGM_DELTA				0x00001000
 #define DGM_NEW_CLIENT			0x00002000
+#define DGM_EXT_UMSG			0x00004000
+#define DGM_TMS_MONITOR			0x00008000
 
-#define USER_DGM_FLAGS			(EXTS_SHOW_S2|DGM_TOB_CHANGE|DGM_NEW_CLIENT)
+#define USER_DGM_FLAGS			(EXTS_SHOW_S2|DGM_TOB_CHANGE|DGM_NEW_CLIENT|DGM_TMS_MONITOR)
 
 
 /*-------------------------------- * ------------------------------*/
@@ -315,17 +316,17 @@ typedef struct
 
 typedef struct
 	{
-	short Status;            // СЃРѕСЃС‚РѕСЏРЅРёРµ РѕР±СЉРµРєС‚Р°
-	short Flags;             // С„Р»Р°РіРё
-	} TStatusPoint;			// РћР±СЉРµРєС‚ РўРЎ
+	short Status;            // состояние объекта
+	short Flags;             // флаги
+	} TStatusPoint;			// Объект ТС
 
 typedef struct
 	{
-	float asFloat;           // СЂРµР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РўРРў
-	short asCode;            // РєРѕРґ РўРРў, РїРѕСЃС‚СѓРїРёРІС€РёР№ СЃ РўРњ
-	short Flags;             // С„Р»Р°РіРё
-	CHAR  Unit[8];           // РµРґРёРЅРёС†С‹ РёР·РјРµСЂРµРЅРёСЏ
-	} TAnalogPoint;  // РћР±СЉРµРєС‚ РўРРў
+	float asFloat;           // реальное значение ТИТ
+	short asCode;            // код ТИТ, поступивший с ТМ
+	short Flags;             // флаги
+	CHAR  Unit[8];           // единицы измерения
+	} TAnalogPoint;  // Объект ТИТ
 
 typedef struct {
 	float Value;
@@ -531,11 +532,11 @@ typedef struct {
 
 typedef struct
 	{
-	float Value;             // Р·РЅР°С‡РµРЅРёРµ СЃС‡РµС‚С‡РёРєР°
-	float Load;              // РЅР°РіСЂСѓР·РєР°
-	short Flags;             // С„Р»Р°
-	CHAR Unit[8];            // РµРґРёРЅРёС†С‹ РёР·РјРµСЂРµРЅРёСЏ
-	} TAccumPoint;   // РћР±СЉРµРєС‚ РўРР
+	float Value;             // значение счетчика
+	float Load;              // нагрузка
+	short Flags;             // фла
+	CHAR Unit[8];            // единицы измерения
+	} TAccumPoint;   // Объект ТИИ
 
 
 typedef struct {
@@ -578,12 +579,6 @@ typedef struct {
 	};
 }TCommonPoint;
 
-
-//	WORD	length;
-//	WORD	signature;
-//	BYTE	flags;
-//	BYTE	importance;
-//	WORD	type;
 
 typedef struct {
 	DWORD	name_off;
@@ -669,16 +664,16 @@ typedef struct {
 }TMSAnalogMSeries;
 
 typedef struct	{
-	CHAR DateTime[24];       // РІСЂРµРјСЏ СЃРѕР±С‹С‚РёСЏ РІ С„РѕСЂРјР°С‚Рµ Р”Р”.РњРњ.Р“Р“Р“Р“ Р§Р§:РњРњ:РЎРЎ.cc
+	CHAR DateTime[24];       // время события в формате ДД.ММ.ГГГГ ЧЧ:ММ:СС.cc
 
-	WORD			Imp;      // СѓСЂРѕРІРµРЅСЊ РІР°Р¶РЅРѕСЃ
-	WORD			ID;       // С‚РёРї СЃРѕР±С‹С‚РёСЏ
+	WORD			Imp;      // уровень важнос
+	WORD			ID;       // тип события
 
 	union {
 		struct {
-			WORD			Ch;       // РєР°РЅР°
-			WORD			RTU;      // РЅРѕРјРµСЂ РљРџ  (c 1)
-			WORD			Point;    // РѕР±СЉРµРєС‚    (c 1)
+			WORD			Ch;       // кана
+			WORD			RTU;      // номер КП  (c 1)
+			WORD			Point;    // объект    (c 1)
 		}Common;
 		struct {
 			WORD Kind;
@@ -688,21 +683,21 @@ typedef struct	{
 	};
 
 	CHAR Data[22];
-} TEvent;      // РЎРѕР±С‹С‚РёРµ
+} TEvent;      // Событие
 
 
 typedef struct
 	{
-	DWORD			Time;     // РІСЂРµРјСЏ РІ СЃРµРє. СЃ 01.01.1970
-	BYTE			Hund;     // СЃРѕС‚С‹Рµ РґРѕР»Рё СЃРµРє.
+	DWORD			Time;     // время в сек. с 01.01.1970
+	BYTE			Hund;     // сотые доли сек.
 
-	BYTE			Imp;      // СѓСЂРѕРІРµРЅСЊ РІР°Р¶РЅРѕСЃ
-	WORD			ID;       // С‚РёРї СЃРѕР±С‹С‚РёСЏ
+	BYTE			Imp;      // уровень важнос
+	WORD			ID;       // тип события
 	union {
 		struct {
-			BYTE			Ch;       // РєР°РЅР°
-			BYTE			RTU;      // РЅРѕРјРµСЂ РљРџ  (c 1)
-			WORD			Point;    // РѕР±СЉРµРєС‚    (c 1)
+			BYTE			Ch;       // кана
+			BYTE			RTU;      // номер КП  (c 1)
+			WORD			Point;    // объект    (c 1)
 		}Common;
 		struct {
 			WORD			Kind;
@@ -716,8 +711,8 @@ typedef struct
 		BYTE end_header;
 		struct
 			{
-			BYTE State;     // РЅРѕРІРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РўРЎ
-			BYTE Class;     // РєР»Р°СЃСЃ С‚РµР»РµСЃРёРіРЅР°Р»Р° (Рљ.Рђ. - 0  РђРџРЎ - 1)
+			BYTE State;     // новое состояние ТС
+			BYTE Class;     // класс телесигнала (К.А. - 0  АПС - 1)
 #ifdef		TMCONN_NEW
 			DWORD		ExtSig;									//6
 			BYTE		ResCh;									//7
@@ -728,32 +723,32 @@ typedef struct
 			DWORD		Flags;									//20
 			WORD		FixMS;									//22  -- no more fields!
 #endif
-			} Status;  // РїР°СЂР°РјРµС‚СЂС‹ РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РўРЎ
+			} Status;  // параметры переключения ТС
 		struct
 			{
-			float Val;      // Р·РЅР°С‡РµРЅРёРµ РєРѕРЅС‚СЂРѕР»РёСЂСѓРµРјРѕРіРѕ РўРРў
-			WORD AlarmID;  // РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓСЃС‚Р°РІРє
-			CHAR  State;    // 0 - СѓСЃС‚Р°РІРєР° СЃРЅСЏС‚Р°, 1 - СѓСЃС‚Р°РІРєР° РІР·РІРµРґРµРЅР°
-			} Alarm;   // РїР°СЂР°РјРµС‚СЂС‹ СЃСЂР°Р±РѕС‚Р°РІС€РµР№ СѓСЃС‚Р°РІРє
+			float Val;      // значение контролируемого ТИТ
+			WORD AlarmID;  // идентификатор уставк
+			CHAR  State;    // 0 - уставка снята, 1 - уставка взведена
+			} Alarm;   // параметры сработавшей уставк
 		struct
 			{
 			BYTE  Ch;
 			BYTE  RTU;
 			WORD Point;
-			BYTE  Cmd;     // РІС‹РґР°РЅРЅР°СЏ РєРѕРјР°РЅРґР°
-			BYTE  Result;  // == SUCCESS РµСЃР»Рё РўРЈ СѓСЃРїРµС€РЅРѕ, РёРЅР°С‡Рµ FAILURE
-			CHAR  UserName[16];  // РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ, РІС‹РґР°РІС€РёР№ РўРЈ
-			} Control; // РїР°СЂР°РјРµС‚СЂС‹ РІС‹РґР°РЅРЅРѕРіРѕ С‚РµР»РµСѓРїСЂР°РІР»РµРЅРёСЏ
+			BYTE  Cmd;     // выданная команда
+			BYTE  Result;  // == SUCCESS если ТУ успешно, иначе FAILURE
+			CHAR  UserName[16];  // пользователь, выдавший ТУ
+			} Control; // параметры выданного телеуправления
 		struct
 			{
 			union	{
 				float F_val;
 				SHORT S_val;
 			};
-			BYTE  Cmd;     // РІС‹РґР°РЅРЅР°СЏ РєРѕРјР°РЅРґР°
-			BYTE  Result;  // == SUCCESS РµСЃР»Рё РўРЈ СѓСЃРїРµС€РЅРѕ, РёРЅР°С‡Рµ FAILURE
-			CHAR  UserName[16];  // РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ, РІС‹РґР°РІС€РёР№ РўРЈ
-			} Regulation; // РїР°СЂР°РјРµС‚СЂС‹ РІС‹РґР°РЅРЅРѕРіРѕ С‚РµР»РµСЂРµРіСѓР»РёСЂРѕРІР°РЅРёСЏ
+			BYTE  Cmd;     // выданная команда
+			BYTE  Result;  // == SUCCESS если ТУ успешно, иначе FAILURE
+			CHAR  UserName[16];  // пользователь, выдавший ТУ
+			} Regulation; // параметры выданного телерегулирования
 
 		struct {
 			float		Value;
@@ -790,7 +785,7 @@ typedef struct
 
 	} Data;
 
-} TTMSEvent;        // РЎРѕР±С‹С‚РёРµ РІ РѕР±РјРµРЅРµ
+} TTMSEvent;        // Событие в обмене
 
 typedef struct {
 			WORD		tmType;
@@ -911,10 +906,10 @@ typedef struct {
 	CHAR	value[128];
 }TAGGED_DATA_DG;
 
-struct StatusData  // РїР°СЂР°РјРµС‚СЂС‹ РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РўРЎ
+struct StatusData  // параметры переключения ТС
 	{
-	BYTE	State;    // РЅРѕРІРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РўРЎ
-	BYTE	Class;    // РєР»Р°СЃСЃ С‚РµР»РµСЃРёРіРЅР°Р»Р° (Рљ.Рђ. - 0  РђРџРЎ - 1)
+	BYTE	State;    // новое состояние ТС
+	BYTE	Class;    // класс телесигнала (К.А. - 0  АПС - 1)
 	DWORD		ExtSig;									//6
 	BYTE		ResCh;									//7
 	BYTE		ResRTU;									//8
@@ -924,20 +919,20 @@ struct StatusData  // РїР°СЂР°РјРµС‚СЂС‹ РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РўРЎ
 	DWORD		Flags;									//20
 	WORD		FixMS;									//22  -- no more fields!
 	};
-struct AlarmData   // РїР°СЂР°РјРµС‚СЂС‹ СЃСЂР°Р±РѕС‚Р°РІС€РµР№ СѓСЃС‚Р°РІРєРё
+struct AlarmData   // параметры сработавшей уставки
 	{
-	float	Val;     // Р·РЅР°С‡РµРЅРёРµ РєРѕРЅС‚СЂРѕР»РёСЂСѓРµРјРѕРіРѕ РўРРў
-	WORD	AlarmID; // РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓСЃС‚Р°РІРє
-	BYTE	State;   // 0 - СѓСЃС‚Р°РІРєР° СЃРЅСЏС‚Р°, 1 - СѓСЃС‚Р°РІРєР° РІР·РІРµРґРµРЅР°
+	float	Val;     // значение контролируемого ТИТ
+	WORD	AlarmID; // идентификатор уставк
+	BYTE	State;   // 0 - уставка снята, 1 - уставка взведена
 	};
-struct ControlData // РїР°СЂР°РјРµС‚СЂС‹ РІС‹РґР°РЅРЅРѕРіРѕ С‚РµР»РµСѓРїСЂР°РІР»РµРЅРёСЏ
+struct ControlData // параметры выданного телеуправления
 	{
 	BYTE	Ch;
 	BYTE	RTU;
 	WORD	Point;
-	BYTE	Cmd;     // РІС‹РґР°РЅРЅР°СЏ РєРѕРјР°РЅРґР°
-	BYTE	Result;  // == SUCCESS РµСЃР»Рё РўРЈ СѓСЃРїРµС€РЅРѕ, РёРЅР°С‡Рµ FAILURE
-	CHAR	UserName[16];  // РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ, РІС‹РґР°РІС€РёР№ РўРЈ
+	BYTE	Cmd;     // выданная команда
+	BYTE	Result;  // == SUCCESS если ТУ успешно, иначе FAILURE
+	CHAR	UserName[16];  // пользователь, выдавший ТУ
 	};
 
 ////////////////////////	AAN
@@ -964,6 +959,11 @@ typedef struct {
 }TMAAN_MIN_DATA;
 
 #define AAMDF_OVF			1
+#define AAMDF_CALC			0x02
+#define AAMDF_SER			0x04
+#define AAMDF_LAST			0x08
+#define AAMDF_CMIN			0x10
+
 
 #define AAMDL_NO_DATA		0
 #define AAMDL_NOT_WR		0xff
@@ -1024,6 +1024,7 @@ typedef struct {
 	DWORD Id;
 	CHAR  Name[64];
 }TTelemetrySource;
+
 #ifndef TServerInfo_DEEFINED
 #define TServerInfo_DEEFINED
 typedef struct {
@@ -1075,16 +1076,18 @@ typedef struct {
 	DWORD ReserveAsyncXPercent;	/* x 100 */
 	DWORD TobSetCount;
 	BYTE  KeyId[8];
-	BYTE  reserverd[44];
+	BYTE  RetroVersion;
+	BYTE  EvLogVersion;
+	DWORD TmValueMaxCount;
+	BYTE  reserverd[38];
 } TServerInfo;
 #endif //TServerInfo_DEEFINED
+
 typedef struct {
 	DWORD	Id;
 	WORD	type;
 	TADRtm	a;
 } TRetransInfo;
-
-#define TMVRF_CHTIME	0x0100	//a.Ch, >=0x100
 
 
 typedef struct {
@@ -1103,6 +1106,8 @@ typedef struct {
 	BYTE	reserved		[0x20];
 
 }TUserInfo;
+
+#define TMVRF_CHTIME	0x0100	//a.Ch, >=0x100
 
 #define TRETRANS_ITEMS_MAX 128
 
@@ -1131,6 +1136,7 @@ typedef struct {
 	short Flags;
 	short Status;
 }TRetroStatusElement;
+
 typedef struct {
 	WORD Ch;
 	WORD RTU;
@@ -1139,6 +1145,7 @@ typedef struct {
 	float asFloat;
 	short asCode;
 }TRetroAnalogElement;
+
 typedef struct {
 	WORD Ch;
 	WORD RTU;
@@ -1212,9 +1219,9 @@ typedef struct {
 	WORD tmsChn;
 	WORD tmsRtu;
 	WORD tmsPoint;
-
 	BYTE value;
 }DeltaStatus;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1227,6 +1234,7 @@ typedef struct {
 	BYTE value;
 	BYTE hinum;
 }DeltaStatus2;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1238,6 +1246,7 @@ typedef struct {
 	WORD tmsPoint;
 	INT value;
 }DeltaAnalog;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1250,6 +1259,7 @@ typedef struct {
 	INT value;
 	BYTE hinum;
 }DeltaAnalog2;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1261,6 +1271,7 @@ typedef struct {
 	WORD tmsPoint;
 	float value;
 }DeltaAnalogF;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1273,6 +1284,7 @@ typedef struct {
 	float value;
 	BYTE hinum;
 }DeltaAnalogF2;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1284,6 +1296,7 @@ typedef struct {
 	WORD tmsPoint;
 	INT value;
 }DeltaAccum;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1296,6 +1309,7 @@ typedef struct {
 	INT value;
 	BYTE hinum;
 }DeltaAccum2;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1307,6 +1321,7 @@ typedef struct {
 	WORD tmsPoint;
 	float value;
 }DeltaAccumF;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1319,6 +1334,7 @@ typedef struct {
 	float value;
 	BYTE hinum;
 }DeltaAccumF2;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1333,6 +1349,7 @@ typedef struct {
 	WORD ctrlGroup;
 	WORD ctrlPoint;
 }DeltaControl;
+
 typedef struct {
 	BYTE type;
 	BYTE length;
@@ -1427,7 +1444,7 @@ typedef struct {
 
 typedef struct {
 	BYTE storage[0x100];
-}ANALOG_QUEUE_FIND;
+}ANALOG_QUEUE_FIND;	//obsolete!
 
 
 #define	huge_flt	FLT_MAX
@@ -1462,7 +1479,9 @@ typedef VOID (_CDECL   * tcapRecvFunc)(DWORD count,LPBYTE buf,DWORD cid,BYTE pro
 
 #ifdef __cplusplus
 #endif
-/*----------------------- РћР‘Р©РР• Р¤РЈРќРљР¦РР --------------------------*/
+
+/*----------------------- ОБЩИЕ ФУНКЦИИ --------------------------*/
+
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX VOID _STDCALL tmcFreeMemory(PVOID p);
 
@@ -1997,16 +2016,16 @@ TMC_IMPEX BOOL _STDCALL tmcGetConnectErrorText(DWORD cid,LPSTR text, DWORD cb_te
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX INT _STDCALL tmcGetLastErrorText(DWORD cid,LPSTR* pp);
 //
-//	РћРџРРЎРђРќРР•:       РїРѕР»СѓС‡Р°РµС‚ С‚РµРєСЃС‚ РїРѕСЃР»РµРґРµРЅРµРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ РѕР± РѕС€РёР±РєРµ
-//					СЃ РєРѕРЅС‚РµРєСЃС‚Р° РїРѕР»Р·РѕРІР°С‚РµР»СЏ РЅР° РўРњРЎ
+//	ОПИСАНИЕ:       получает текст последенего сообщения об ошибке
+//					с контекста ползователя на ТМС
 //
-//	РџРђР РђРњР•РўР Р«:      pp    - РІ pp[0] РєР»Р°РґРµС‚СЃСЏ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° С‚РµРєСЃС‚РѕРІСѓСЋ
-//					      СЃС‚СЂРѕРєСѓ, РєРѕС‚РѕСЂСѓСЋ РІ РґР°Р»СЊРЅРµР№С€РµРј РЅРµРѕР±С…РѕРґРёРјРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ
-//					      СЃ РїРѕРјРѕС‰СЊСЋ tmcFreeMemory()
+//	ПАРАМЕТРЫ:      pp    - в pp[0] кладется указатель на текстовую
+//					      строку, которую в дальнейшем необходимо освободить
+//					      с помощью tmcFreeMemory()
 //
-//	Р’РћР—Р’Р РђРў:         1  - СѓСЃРїРµС…
-//					 0  - РѕС€РёР±РєР°
-//					-1 - РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ СЃРµСЂРІРµСЂРѕРј
+//	ВОЗВРАТ:         1  - успех
+//					 0  - ошибка
+//					-1 - не поддерживается сервером
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2230,6 +2249,12 @@ TMC_IMPEX short _STDCALL tmcDeliverMultipleValues(DWORD cid,PVOID data,DWORD cb_
 //
 //***************************************************************
 
+//***************************************************************	IMPLEMENTED
+TMC_IMPEX DWORD _STDCALL tmcGetSrvThreadLoad();
+// should be called by delta immediately after tmcSetValues(),tmcSetValuesEx(),tmcSetTimedValues(),tmcDeliverMultipleValues()
+//
+//***************************************************************
+
 
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX LPSTR* _STDCALL tmcGetStatusClassData(DWORD cid,DWORD count /* max 128*/,TADRtm* statuses);
@@ -2247,35 +2272,59 @@ TMC_IMPEX LPSTR* _STDCALL tmcGetAnalogClassData(DWORD cid,DWORD count /* max 128
 TMC_IMPEX  short _STDCALL tmcControl(DWORD cid, short Ch, short RTU, short Point,
 										  short Cmd);
 //
-//	РћРџРРЎРђРќРР•:       РІС‹РґР°С‡Р° РєРѕРјР°РЅРґС‹ С‚РµР»РµСѓРїСЂР°РІР»РµРЅРёСЏ
+//	ОПИСАНИЕ:       выдача команды телеуправления
 //
-//	РџРђР РђРњР•РўР Р«:      Ch    - РєР°РЅР°Р»,
-//					RTU   - РЅРѕРјРµСЂ РљРџ (СЃ 1),
-//					Point - РЅРѕРјРµСЂ РѕР±СЉРµРєС‚Р° (СЃ 1)
-//					Cmd - РєРѕРјР°РЅРґР° РўРЈ (0-РћРўРљР›, 1-Р’РљР›)
+//	ПАРАМЕТРЫ:      Ch    - канал,
+//					RTU   - номер КП (с 1),
+//					Point - номер объекта (с 1)
+//					Cmd - команда ТУ (0-ОТКЛ, 1-ВКЛ)
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					РёРЅР°С‡Рµ: FAILURE
+//	ВОЗВРАТ:        SUCCESS - успех
+//					иначе: FAILURE
 //***************************************************************
 
 //*************************************************************** 	IMPLEMENTED
 TMC_IMPEX  INT _STDCALL  tmcExecuteControlScript(DWORD cid, short Ch, short RTU, short Point,
 										  short Cmd);
 //
-//	РћРџРРЎРђРќРР•:       РїСЂРѕРІРµСЂРєР° СЂР°Р·СЂРµС€РµРЅРёСЏ РўРЈ С‡РµСЂРµР· СЃРєСЂРёРїС‚ СЃРµСЂРІРµСЂР°
+//	ОПИСАНИЕ:       проверка разрешения ТУ через скрипт сервера
 //
-//	РџРђР РђРњР•РўР Р«:      Ch    - РєР°РЅР°Р»,
-//					RTU   - РЅРѕРјРµСЂ РљРџ (СЃ 1),
-//					Point - РЅРѕРјРµСЂ РѕР±СЉРµРєС‚Р° (СЃ 1)
-//					Cmd - РєРѕРјР°РЅРґР° РўРЈ (0-РћРўРљР›, 1-Р’РљР›)
+//	ПАРАМЕТРЫ:      Ch    - канал,
+//					RTU   - номер КП (с 1),
+//					Point - номер объекта (с 1)
+//					Cmd - команда ТУ (0-ОТКЛ, 1-ВКЛ)
 //
-//	Р’РћР—Р’Р РђРў:        1  - ok
-//					0  - РЅРµС‚ СЂР°Р·СЂРµС€РµРЅРёСЏ
-//					-1 - РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ
+//	ВОЗВРАТ:        1  - ok
+//					0  - нет разрешения
+//					-1 - не поддерживается
 //***************************************************************
 
 //*************************************************************** 	IMPLEMENTED
+TMC_IMPEX  INT _STDCALL tmcExecuteRegulationScript(DWORD cid, short Ch, short RTU, short Point,BYTE reg_type,PVOID reg_data);
+//
+//	ОПИСАНИЕ:       проверка разрешения ТУ через скрипт сервера
+//
+//	ПАРАМЕТРЫ:      Ch    - канал,
+//					RTU   - номер КП (с 1),
+//					Point - номер объекта (с 1)
+//
+//	ВОЗВРАТ:        1  - ok
+//					0  - нет разрешения
+//					-1 - не поддерживается
+//***************************************************************
+
+
+
+//*************************************************************** 	IMPLEMENTED
 TMC_IMPEX	BOOL _STDCALL tmcOverrideControlScript(DWORD cid,BOOL fOverride);
+//
+//
+//***************************************************************
+
+
+
+//*************************************************************** 	IMPLEMENTED
+TMC_IMPEX  BOOL _STDCALL tmcSetTcPwd(DWORD cid,LPSTR pwd);
 //
 //
 //***************************************************************
@@ -2284,15 +2333,15 @@ TMC_IMPEX	BOOL _STDCALL tmcOverrideControlScript(DWORD cid,BOOL fOverride);
 TMC_IMPEX  short _STDCALL tmcControlByStatus(DWORD cid, short Ch, short RTU, short Point,
 										  short Cmd);
 //
-//	РћРџРРЎРђРќРР•:       РІС‹РґР°С‡Р° РєРѕРјР°РЅРґС‹ С‚РµР»РµСѓРїСЂР°РІР»РµРЅРёСЏ
+//	ОПИСАНИЕ:       выдача команды телеуправления
 //
-//	РџРђР РђРњР•РўР Р«:      Ch    - РєР°РЅР°Р»,
-//					RTU   - РЅРѕРјРµСЂ РљРџ (СЃ 1),
-//					Point - РЅРѕРјРµСЂ РѕР±СЉРµРєС‚Р° (СЃ 1)
-//					Cmd - РєРѕРјР°РЅРґР° РўРЈ (0-РћРўРљР›, 1-Р’РљР›)
+//	ПАРАМЕТРЫ:      Ch    - канал,
+//					RTU   - номер КП (с 1),
+//					Point - номер объекта (с 1)
+//					Cmd - команда ТУ (0-ОТКЛ, 1-ВКЛ)
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					РёРЅР°С‡Рµ:
+//	ВОЗВРАТ:        SUCCESS - успех
+//					иначе:
 #define TMCTLERR_INVALID_ADDRESS	0
 #define TMCTLERR_NO_RESOURCES		-1
 #define TMCTLERR_TMSOURCE_FAILED	-2
@@ -2312,6 +2361,7 @@ TMC_IMPEX  short _STDCALL tmcControlByStatus(DWORD cid, short Ch, short RTU, sho
 #define	TMCTLERR_BUSY				-16
 #define	TMCTLERR_TAKEOVER			-17
 #define	TMCTLERR_CHANGE_TIMEOUT		-18
+#define	TMCTLERR_NEED_PASSW			-19
 #define	TMCTLERR_I850_BASE			850
 #define	TMCTLERR_I850_ADD_CAUSE_UNKNOWN							-(TMCTLERR_I850_BASE+0)
 #define	TMCTLERR_I850_ADD_CAUSE_NOT_SUPPORTED					-(TMCTLERR_I850_BASE+1)
@@ -2355,25 +2405,25 @@ TMC_IMPEX  short _STDCALL tmcControlByStatus(DWORD cid, short Ch, short RTU, sho
 //*************************************************************** 	IMPLEMENTED
 TMC_IMPEX  short _STDCALL tmcRegulationByAnalog(DWORD cid, short Ch, short RTU, short Point,BYTE reg_type, PVOID p_data);
 //
-//	РћРџРРЎРђРќРР•:       РІС‹РґР°С‡Р° РєРѕРјР°РЅРґС‹ С‚РµР»РµСѓРїСЂР°РІР»РµРЅРёСЏ
+//	ОПИСАНИЕ:       выдача команды телеуправления
 //
-//	РџРђР РђРњР•РўР Р«:      Ch    - РєР°РЅР°Р»,
-//					RTU   - РЅРѕРјРµСЂ РљРџ (СЃ 1),
-//					Point - РЅРѕРјРµСЂ РѕР±СЉРµРєС‚Р° (СЃ 1)
+//	ПАРАМЕТРЫ:      Ch    - канал,
+//					RTU   - номер КП (с 1),
+//					Point - номер объекта (с 1)
 //					reg_type - TMS_REGUL_XXX
-//					p_data - РґР»СЏ TMS_REGUL_STEP Рё TMS_REGUL_CODE - short*, 
-//					p_data - РґР»СЏ TMS_REGUL_VAL - float*, 
+//					p_data - для TMS_REGUL_STEP и TMS_REGUL_CODE - short*, 
+//					p_data - для TMS_REGUL_VAL - float*, 
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					РёРЅР°С‡Рµ:	TMCTLER_XXX
+//	ВОЗВРАТ:        SUCCESS - успех
+//					иначе:	TMCTLER_XXX
 //***************************************************************
 
 //*************************************************************** 	IMPLEMENTED
-#define	TCWT_NO_WAIT			0		//РЅРµ Р¶РґР°С‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚Р°
-#define	TCWT_WAIT_RESPONSE		1		//РґРѕР¶РґР°С‚СЊСЃСЏ РѕС‚РІРµС‚Р° РѕС‚ С‚РµР»РµРјРµС‚СЂРёРё
-#define	TCWT_EXEC_ASYNC			2		//РёСЃРїРѕР»РЅСЏС‚СЊ Р°СЃРёРЅС…СЂРѕРЅРЅРѕ, СЂРµР·СѓР»СЊС‚Р°С‚С‹ РІ РґРµР№С‚Р°РіСЂР°РјРјР°С… (СЃ РїСЂРѕРІРµСЂРєРѕР№ РёР·РјРµРЅРµРЅРёСЏ РїР°СЂР°РјРµС‚СЂР°)
-#define	TCWT_WAIT_CHANGE		3		//РґРѕР¶РґР°С‚СЊСЃСЏ РёР·РјРµРЅРµРЅРёСЏ С‚РµР»РµРїР°СЂР°РјРµС‚СЂР°
-#define	TCWT_WAIT_RESP_LOG		4		//РґРѕР¶РґР°С‚СЊСЃСЏ РѕС‚РІРµС‚Р° РѕС‚ С‚РµР»РµРјРµС‚СЂРёРё + Р·Р°РїРёСЃСЊ РЅРµСѓСЃРїРµС€РЅРѕРіРѕ СЂРµР·СѓР»СЊС‚Р°С‚Р°
+#define	TCWT_NO_WAIT			0		//не ждать результата
+#define	TCWT_WAIT_RESPONSE		1		//дождаться ответа от телеметрии
+#define	TCWT_EXEC_ASYNC			2		//исполнять асинхронно, результаты в дейтаграммах (с проверкой изменения параметра)
+#define	TCWT_WAIT_CHANGE		3		//дождаться изменения телепараметра
+#define	TCWT_WAIT_RESP_LOG		4		//дождаться ответа от телеметрии + запись неуспешного результата
 
 TMC_IMPEX
 short _STDCALL tmcControlByStatusEx(
@@ -2382,8 +2432,8 @@ short _STDCALL tmcControlByStatusEx(
 	short	RTU, 
 	short	Point,
 	short	Cmd,
-	BYTE	WaitType,	//С‚РёРї РѕР¶РёРґР°РЅРёСЏ СЂРµР·СѓР»СЊС‚Р°С‚Р°
-	PDWORD	pCmdId		//РЅР° РІС‹С…РѕРґРµ - РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РєРѕРјР°РЅРґС‹
+	BYTE	WaitType,	//тип ожидания результата
+	PDWORD	pCmdId		//на выходе - идентификатор команды
 );
 //
 //***************************************************************
@@ -2406,43 +2456,43 @@ short _STDCALL tmcRegulationByAnalogEx(
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX  short _STDCALL tmcSystemTime(DWORD cid, char *DateTime, struct tm *tm);
 //
-//	РћРџРРЎРђРќРР•:       Р—Р°РїСЂРѕСЃ РІСЂРµРјРµРЅРё РЅР° СЃРµСЂРІРµСЂРµ
+//	ОПИСАНИЕ:       Запрос времени на сервере
 //
-//	РџРђР РђРњР•РўР Р«:      DateTime - Р°РґСЂРµСЃ СЃС‚СЂРѕРєРё РґР»СЏ РІС‹РґР°С‡Рё РІСЂРµРјРµРЅ
-//                             РІ С„РѕСЂРјР°С‚Рµ "Р”Р”.РњРњ.Р“Р“Р“Р“ Р§Р§:РњРњ:РЎРЎ" РёР»Рё NULL
-//					tm       - Р°РґСЂРµСЃ СЃС‚СЂСѓРєС‚СѓСЂС‹ tm (СЃРј. TIME.H) РёР»Рё NULL
+//	ПАРАМЕТРЫ:      DateTime - адрес строки для выдачи времен
+//                             в формате "ДД.ММ.ГГГГ ЧЧ:ММ:СС" или NULL
+//					tm       - адрес структуры tm (см. TIME.H) или NULL
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 
-/*--------------- Р¤РЈРќРљР¦РР РџРћР›РЈР§Р•РќРРЇ Р”РђРќРќР«РҐ -----------------------*/
+/*--------------- ФУНКЦИИ ПОЛУЧЕНИЯ ДАННЫХ -----------------------*/
 
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX  short _STDCALL tmcStatus(DWORD cid, short Ch, short RTU, short Point);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РѕР±СЉРµРєС‚Р° РўРЎ
+//	ОПИСАНИЕ:       Возвращает состояние объекта ТС
 //
-//	РџРђР РђРњР•РўР Р«:      Ch    - РєР°РЅР°Р»,
-//					RTU   - РЅРѕРјРµСЂ РљРџ (СЃ 1),
-//					Point - РЅРѕРјРµСЂ РѕР±СЉРµРєС‚Р° (СЃ 1)
+//	ПАРАМЕТРЫ:      Ch    - канал,
+//					RTU   - номер КП (с 1),
+//					Point - номер объекта (с 1)
 //
-//	Р’РћР—Р’Р РђРў:        0 - РћРўРљР›,  1 - Р’Рљ
-//				   -1 - РѕС€РёР±РєР°, РЅРµС‚ РґР°РЅРЅС‹С…
+//	ВОЗВРАТ:        0 - ОТКЛ,  1 - ВК
+//				   -1 - ошибка, нет данных
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX  short _STDCALL tmcStatusFull(DWORD cid, short Ch, short RTU, short Point,
 											 TStatusPoint *SP);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РѕР±СЉРµРєС‚Р° РўРЎ РІ СЃС‚СЂСѓРєС‚СѓСЂРµ
+//	ОПИСАНИЕ:       Возвращает состояние объекта ТС в структуре
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					SP             - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ РѕР±СЉРµРєС‚Р° РўРЎ
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					SP             - указатель на структуру объекта ТС
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°, РЅРµС‚ РґР°РЅРЅС‹С…
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка, нет данных
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2454,17 +2504,17 @@ TMC_IMPEX  short _STDCALL tmcStatusFullEx(DWORD cid, short Ch, short RTU, short 
 TMC_IMPEX  float _STDCALL tmcAnalog(DWORD cid, short Ch, short RTU, short Point,
 										 const char  *DateTime, short RetroNum);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ РѕР±СЉРµРєС‚Р° РўРРў
+//	ОПИСАНИЕ:       Возвращает значение объекта ТИТ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					DateTime, RetroNum - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РїРѕР»СѓС‡РµРЅРёСЏ
-//									     Р·РЅР°С‡РµРЅРёСЏ РёР· СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІС‹.
-//                                       DateTime Р·Р°РґР°РµС‚СЃСЏ РІ С„РѕСЂРјР°С‚Рµ
-//                                       "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//									     Р•СЃР»Рё РёРЅС‚РµСЂРµСЃСѓСЋС‚ С‚РµРєСѓС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ,
-//									     С‚Рѕ DateTime == NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					DateTime, RetroNum - опциональные параметры получения
+//									     значения из ретроспективы.
+//                                       DateTime задается в формате
+//                                       "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//									     Если интересуют текущие значения,
+//									     то DateTime == NULL
 //
-//	Р’РћР—Р’Р РђРў:        СЂРµР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РўРРў РёР»Рё huge_flt РїСЂРё РѕС‚СЃСѓС‚СЃС‚РІРёРё РґР°РЅРЅС‹С…
+//	ВОЗВРАТ:        реальное значение ТИТ или huge_flt при отсутствии данных
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2473,23 +2523,23 @@ TMC_IMPEX  short _STDCALL tmcAnalogFull(DWORD cid, short Ch, short RTU, short Po
 											 const char *DateTime,
 											 short RetroNum);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ РѕР±СЉРµРєС‚Р° РўРРў РІ СЃС‚СЂСѓРєС‚СѓСЂРµ
+//	ОПИСАНИЕ:       Возвращает значение объекта ТИТ в структуре
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					AP             - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ РўРРў
-//									 РµСЃР»Рё AP->asFloat == _huge_flt С‚Рѕ
-//									 РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РёР· РєРѕРґР° РІ Р·РЅР°С‡РµРЅРёРµ РЅРµ
-//									 РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ. РџСЂРё СЌС‚РѕРј СѓРјРµРЅСЊС€Р°РµС‚СЃСЏ
-//									 РІСЂРµРјСЏ РґРѕСЃС‚СѓРїР°.
-//					DateTime, RetroNum - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РїРѕР»СѓС‡РµРЅРёСЏ
-//									     Р·РЅР°С‡РµРЅРёСЏ РёР· СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІС‹.
-//                                       DateTime Р·Р°РґР°РµС‚СЃСЏ РІ С„РѕСЂРјР°С‚Рµ
-//                                       "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//									     Р•СЃР»Рё РёРЅС‚РµСЂРµСЃСѓСЋС‚ С‚РµРєСѓС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ,
-//									     С‚Рѕ DateTime == NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					AP             - указатель на структуру ТИТ
+//									 если AP->asFloat == _huge_flt то
+//									 преобразования из кода в значение не
+//									 производится. При этом уменьшается
+//									 время доступа.
+//					DateTime, RetroNum - опциональные параметры получения
+//									     значения из ретроспективы.
+//                                       DateTime задается в формате
+//                                       "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//									     Если интересуют текущие значения,
+//									     то DateTime == NULL
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°, РЅРµС‚ РґР°РЅРЅС‹С…
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка, нет данных
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2499,10 +2549,10 @@ TMC_IMPEX  short _STDCALL tmcAnalogMicroSeries(
 		TADRtm*				addr_list,
 		TMSAnalogMSeries**	result_list
 );
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
-//	РљР°Р¶РґС‹Р№ СѓРєР°Р·Р°С‚РµР»СЊ РІ СЃРїРёСЃРєРµ result_list РґРѕР»Р¶РµРЅ Р±С‹С‚ РѕСЃРІРѕР±РѕР¶РґРµРЅ
-//  СЃ РїРѕРјРѕС‰СЊСЋ tmcFreeMemory()
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
+//	Каждый указатель в списке result_list должен быт освобожден
+//  с помощью tmcFreeMemory()
 //***************************************************************
 	
 
@@ -2512,34 +2562,34 @@ TMC_IMPEX  short _STDCALL tmcAnalogMicroSeries(
 TMC_IMPEX  float _STDCALL tmcAccumValue(DWORD cid, short Ch, short RTU, short Point,
 											 const char *DateTime);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ СЃС‡РµС‚С‡РёРєР° РўРР
+//	ОПИСАНИЕ:       Возвращает значение счетчика ТИИ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					DateTime - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ РїРѕР»СѓС‡РµРЅРёСЏ
-//							   Р·РЅР°С‡РµРЅРёСЏ РёР· СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІС‹.
-//                             DateTime Р·Р°РґР°РµС‚СЃСЏ РІ С„РѕСЂРјР°С‚Рµ
-//                             "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//							   Р•СЃР»Рё РёРЅС‚РµСЂРµСЃСѓСЋС‚ С‚РµРєСѓС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ,
-//							   С‚Рѕ DateTime == NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					DateTime - опциональный параметр получения
+//							   значения из ретроспективы.
+//                             DateTime задается в формате
+//                             "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//							   Если интересуют текущие значения,
+//							   то DateTime == NULL
 //
-//	Р’РћР—Р’Р РђРў:        Р·РЅР°С‡РµРЅРёРµ СЃС‡РµС‚С‡РёРєР° РўРР РёР»Рё huge_flt РїСЂРё РѕС€РёР±РєРµ
+//	ВОЗВРАТ:        значение счетчика ТИИ или huge_flt при ошибке
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX  float _STDCALL tmcAccumLoad(DWORD cid, short Ch, short RTU, short Point,
 											const char *DateTime);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ РЅР°РіСЂСѓР·РєРё РёР· РўРР
+//	ОПИСАНИЕ:       Возвращает значение нагрузки из ТИИ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					DateTime - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ РїРѕР»СѓС‡РµРЅРёСЏ
-//							   Р·РЅР°С‡РµРЅРёСЏ РёР· СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІС‹.
-//                             DateTime Р·Р°РґР°РµС‚СЃСЏ РІ С„РѕСЂРјР°С‚Рµ
-//                             "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//							   Р•СЃР»Рё РёРЅС‚РµСЂРµСЃСѓСЋС‚ С‚РµРєСѓС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ,
-//							   С‚Рѕ DateTime == NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					DateTime - опциональный параметр получения
+//							   значения из ретроспективы.
+//                             DateTime задается в формате
+//                             "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//							   Если интересуют текущие значения,
+//							   то DateTime == NULL
 //
-//	Р’РћР—Р’Р РђРў:        Р·РЅР°С‡РµРЅРёРµ РЅР°РіСЂСѓР·РєРё РёР»Рё huge_flt РїСЂРё РѕС€РёР±РєРµ
+//	ВОЗВРАТ:        значение нагрузки или huge_flt при ошибке
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2547,19 +2597,19 @@ TMC_IMPEX  short _STDCALL tmcAccumFull(DWORD cid, short Ch, short RTU, short Poi
 											TAccumPoint *AP,
 											const char *DateTime);
 //
-//	РћРџРРЎРђРќРР•:       Р’РѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ РѕР±СЉРµРєС‚Р° РўРР РІ СЃС‚СЂСѓРєС‚СѓСЂРµ
+//	ОПИСАНИЕ:       Возвращает значение объекта ТИИ в структуре
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					AP       - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ РўРР
-//					DateTime - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ РїРѕР»СѓС‡РµРЅРёСЏ
-//							   Р·РЅР°С‡РµРЅРёСЏ РёР· СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІС‹.
-//                             DateTime Р·Р°РґР°РµС‚СЃСЏ РІ С„РѕСЂРјР°С‚Рµ
-//                             "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//							   Р•СЃР»Рё РёРЅС‚РµСЂРµСЃСѓСЋС‚ С‚РµРєСѓС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ,
-//							   С‚Рѕ DateTime == NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					AP       - указатель на структуру ТИИ
+//					DateTime - опциональный параметр получения
+//							   значения из ретроспективы.
+//                             DateTime задается в формате
+//                             "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//							   Если интересуют текущие значения,
+//							   то DateTime == NULL
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°, РЅРµС‚ РґР°РЅРЅС‹С…
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка, нет данных
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2570,7 +2620,7 @@ TMC_IMPEX  short _STDCALL tmcAccumFullEx(
 
 //***************************************************************
 
-/*--------------- Р¤РЈРќРљР¦РР Р—РђРќР•РЎР•РќРРЇ Р”РђРќРќР«РҐ -----------------------*/
+/*--------------- ФУНКЦИИ ЗАНЕСЕНИЯ ДАННЫХ -----------------------*/
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX short _STDCALL tmcSetStatusNormal(DWORD cid, short Ch, short RTU, short Point,
 											WORD NValue);
@@ -2617,38 +2667,38 @@ TMC_IMPEX short _STDCALL tmcSetStatus(DWORD cid, short Ch, short RTU, short Poin
 											char Value,
 											const char *DateTime, short Hund);
 //
-//	РћРџРРЎРђРќРР•:       Р·Р°РґР°РµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РѕР±СЉРµРєС‚Р° РўРЎ
+//	ОПИСАНИЕ:       задает состояние объекта ТС
 //
-//	РџРђР РђРњР•РўР Р«:      Ch    		   - РєР°РЅР°Р»,
-//					RTU            - РЅРѕРјРµСЂ РљРџ (СЃ 1),
-//					Point          - РЅРѕРјРµСЂ РѕР±СЉРµРєС‚Р° (СЃ 1)
-//					Value          - РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РўРЎ
-//					DateTime       - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ СЂРµР°Р»СЊРЅРѕРіРѕ
-//									 РІСЂРµРјРµРЅРё РІРѕР·РЅРёРєРЅРѕРІРµРЅРёСЏ РўРЎ.
-//									 С„РѕСЂРјР°С‚: "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ.СЃСЃ"
-//									 СЃСЃ - СЃРѕС‚С‹Рµ РґРѕР»Рё СЃРµРєСѓРЅРґ
-//									 Р•СЃР»Рё СЂРµР°Р»СЊРЅРѕРµ РІСЂРµРјСЏ РЅРµРёР·РІРµСЃС‚РЅРѕ, С‚Рѕ
-//									 СЃР»РµРґСѓРµС‚ РїРµСЂРµРґР°С‚СЊ Time = NULL
+//	ПАРАМЕТРЫ:      Ch    		   - канал,
+//					RTU            - номер КП (с 1),
+//					Point          - номер объекта (с 1)
+//					Value          - новое значение ТС
+//					DateTime       - опциональный параметр реального
+//									 времени возникновения ТС.
+//									 формат: "ДД.ММ.ГГ ЧЧ:ММ:СС.сс"
+//									 сс - сотые доли секунд
+//									 Если реальное время неизвестно, то
+//									 следует передать Time = NULL
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************
 TMC_IMPEX  short _STDCALL tmcFillStatusGroup(DWORD cid, short Ch, short RTU, short Point,
 												  short Quan, char *SGroup);
 //
-//	РћРџРРЎРђРќРР•:       Р·Р°РґР°РµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РіСЂСѓРїРїС‹ РўРЎ
+//	ОПИСАНИЕ:       задает состояние группы ТС
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU        - СЃРј. РІС‹С€Рµ
-//					Point          - РЅР°С‡Р°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚ РўРЎ
-//					Quan           - РєРѕР»РёС‡РµСЃС‚РІРѕ РўРЎ РІ РіСЂСѓРїРїРµ
-//					SGroup         - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РјР°СЃСЃРёРІ РўРЎ (РјР°СЃСЃРёРІ Р±РёС‚,
-//									 РјР»Р°РґС€РёР№ Р±РёС‚ РІ Р±Р°Р№С‚Рµ - РјРµРЅСЊС€РёР№ РЅРѕРјРµ
-//									 РѕР±СЉРµРєС‚Р°)
+//	ПАРАМЕТРЫ:      Ch, RTU        - см. выше
+//					Point          - начальный объект ТС
+//					Quan           - количество ТС в группе
+//					SGroup         - указатель на массив ТС (массив бит,
+//									 младший бит в байте - меньший номе
+//									 объекта)
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2657,18 +2707,18 @@ TMC_IMPEX  short _STDCALL tmcSetStatusFlags(DWORD cid, short Ch, short RTU, shor
 TMC_IMPEX  short _STDCALL tmcClrStatusFlags(DWORD cid, short Ch, short RTU, short Point,
 													 short Flags);
 //
-//	РћРџРРЎРђРќРР•:       РЈСЃС‚Р°РЅР°РІР»РёРІР°СЋС‚/СЃР±СЂР°СЃС‹РІР°СЋС‚ С„Р»Р°РіРё РѕР±СЉРµРєС‚Р° РўРЎ
-//					tmSetStatusFlags - СѓСЃС‚Р°РЅРѕРІРєР°
-//					tmClrStatusFlags - СЃР±СЂРѕСЃ
+//	ОПИСАНИЕ:       Устанавливают/сбрасывают флаги объекта ТС
+//					tmSetStatusFlags - установка
+//					tmClrStatusFlags - сброс
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU        - СЃРј. РІС‹С€Рµ
-//					Point          - N РѕР±СЉРµРєС‚Р° (СЃ 1), РµСЃР»Рё == 0 С‚Рѕ
-//									 РѕРїРµСЂР°С†РёСЏ РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ СЃРѕ РІСЃРµ
-//									 РѕР±СЉРµРєС‚Р°РјРё РґР°РЅРЅРѕРіРѕ Рљ
-//					Flags          - Р±РёС‚РѕРІР°СЏ РјР°СЃРєР° С„Р»Р°РіРѕРІ
+//	ПАРАМЕТРЫ:      Ch, RTU        - см. выше
+//					Point          - N объекта (с 1), если == 0 то
+//									 операция производится со все
+//									 объектами данного К
+//					Flags          - битовая маска флагов
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2689,17 +2739,17 @@ TMC_IMPEX  short _STDCALL tmcSetAnalog(DWORD cid, short Ch, short RTU, short Poi
 											float Value,
 											const char *DateTime);
 //
-//	РћРџРРЎРђРќРР•:       Р·Р°РґР°РµС‚ Р·РЅР°С‡РµРЅРёРµ РѕР±СЉРµРєС‚Р° РўРРў
+//	ОПИСАНИЕ:       задает значение объекта ТИТ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					Value          - РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РўРРў (СЂРµР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ)
-//					DateTime       - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ Р·Р°РїРёСЃРё РўРРў
-//									 РІ СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІСѓ РІ С„РѕСЂРјР°С‚Рµ "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//									 Р•СЃР»Рё Р·Р°РґР°РµС‚СЃСЏ РјРіРЅРѕРІРµРЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ, С‚Рѕ
-//									 СЃР»РµРґСѓРµС‚ РїРµСЂРµРґР°С‚СЊ DateTime = NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					Value          - новое значение ТИТ (реальное число)
+//					DateTime       - опциональный параметр записи ТИТ
+//									 в ретроспективу в формате "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//									 Если задается мгновенное значение, то
+//									 следует передать DateTime = NULL
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2710,30 +2760,30 @@ TMC_IMPEX  short _STDCALL tmcSetAnalogByCodeUT(DWORD cid, short Ch, short RTU, s
 TMC_IMPEX  short _STDCALL tmcSetAnalogByCode(DWORD cid, short Ch, short RTU, short Point,
 												  short Value);
 //
-//	РћРџРРЎРђРќРР•:       Р·Р°РґР°РµС‚ Р·РЅР°С‡РµРЅРёРµ РѕР±СЉРµРєС‚Р° РўРРў РІ РєРѕРґРµ
+//	ОПИСАНИЕ:       задает значение объекта ТИТ в коде
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					Value          - РєРѕРґ РўРРў. РћС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ
-//									 Р·Р°РґР°СЋС‚СЃСЏ РІ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРј РєРѕРґРµ
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					Value          - код ТИТ. Отрицательные значения
+//									 задаются в дополнительном коде
 //									 (-1 == 0FFFFh)
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //*************************************************************** 	IMPLEMENTED
 TMC_IMPEX  short _STDCALL tmcFillAnalogGroup(DWORD cid, short Ch, short RTU, short Point,
 											short Quan, short *AGroup);
 //
-//	РћРџРРЎРђРќРР•:       Р·Р°РґР°РµС‚ Р·РЅР°С‡РµРЅРёСЏ РіСЂСѓРїРїС‹ РўРРў
+//	ОПИСАНИЕ:       задает значения группы ТИТ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU        - СЃРј. РІС‹С€Рµ
-//					Point          - РЅР°С‡Р°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚ РўРРў
-//					Quan           - РєРѕР»РёС‡РµСЃС‚РІРѕ РўРРў РІ РіСЂСѓРїРїРµ
-//					AGroup         - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РјР°СЃСЃРёРІ РўРРў (РєРѕРґС‹)
+//	ПАРАМЕТРЫ:      Ch, RTU        - см. выше
+//					Point          - начальный объект ТИТ
+//					Quan           - количество ТИТ в группе
+//					AGroup         - указатель на массив ТИТ (коды)
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //*************************************************************** IMPLEMENTED
@@ -2742,18 +2792,18 @@ TMC_IMPEX  short _STDCALL tmcSetAnalogFlags(DWORD cid, short Ch, short RTU, shor
 TMC_IMPEX  short _STDCALL tmcClrAnalogFlags(DWORD cid, short Ch, short RTU, short Point,
 												 short Flags);
 //
-//	РћРџРРЎРђРќРР•:       РЈСЃС‚Р°РЅР°РІР»РёРІР°СЋС‚/СЃР±СЂР°СЃС‹РІР°СЋС‚ С„Р»Р°РіРё РѕР±СЉРµРєС‚Р° РўРРў
-//					tmcSetAnalogFlags - СѓСЃС‚Р°РЅРѕРІРєР°
-//					tmcClrAnalogFlags - СЃР±СЂРѕСЃ
+//	ОПИСАНИЕ:       Устанавливают/сбрасывают флаги объекта ТИТ
+//					tmcSetAnalogFlags - установка
+//					tmcClrAnalogFlags - сброс
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU        - СЃРј. РІС‹С€Рµ
-//					Point          - N РѕР±СЉРµРєС‚Р° (СЃ 1), РµСЃР»Рё == 0 С‚Рѕ
-//									 РѕРїРµСЂР°С†РёСЏ РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ СЃРѕ РІСЃРµ
-//									 РѕР±СЉРµРєС‚Р°РјРё РґР°РЅРЅРѕРіРѕ Рљ
-//					Flags          - Р±РёС‚РѕРІР°СЏ РјР°СЃРєР° С„Р»Р°РіРѕРІ
+//	ПАРАМЕТРЫ:      Ch, RTU        - см. выше
+//					Point          - N объекта (с 1), если == 0 то
+//									 операция производится со все
+//									 объектами данного К
+//					Flags          - битовая маска флагов
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //*************************************************************** 	IMPLEMENTED
@@ -2761,21 +2811,21 @@ TMC_IMPEX  short _STDCALL tmcIncAccumPoints(DWORD cid, short Ch, short RTU, shor
 												 short DataType, short Quan,
 												 void *AGroup);
 //
-//	РћРџРРЎРђРќРР•:       РџРѕСЃС‚СѓРїР»РµРЅРёРµ РЅРѕРІС‹С… Р·РЅР°С‡РµРЅРёР№ РґР»СЏ РѕР±СЉРµРєС‚РѕРІ РўРР
+//	ОПИСАНИЕ:       Поступление новых значений для объектов ТИИ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU        - СЃРј. РІС‹С€Рµ
-//					Point          - РЅР°С‡Р°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚ РўРР
-//                  DataType       - СЂР°Р·СЂСЏРґРЅРѕСЃС‚СЊ Р°РїРїР°СЂР°С‚РЅРѕРіРѕ СЃС‡РµС‚С‡РёРєР°
-//                                   РµСЃР»Рё (DataType&0x8000) != 0 С‚Рѕ
-//							 		 РїСЂРµРґРѕСЃС‚Р°РІР»СЏРµРјС‹Рµ РґР°РЅРЅС‹Рµ - С‡РёСЃС‚С‹Р№
-//                                   РїСЂРёСЂРѕСЃС‚ РёРјРїСѓР»СЊСЃРѕРІ
+//	ПАРАМЕТРЫ:      Ch, RTU        - см. выше
+//					Point          - начальный объект ТИИ
+//                  DataType       - разрядность аппаратного счетчика
+//                                   если (DataType&0x8000) != 0 то
+//							 		 предоставляемые данные - чистый
+//                                   прирост импульсов
 #define ACCUM_TYPE_EXT_FLOAT (32*1+1)
 #define ACCUM_TYPE_EXT_LD	(32*1+2)
-//					Quan           - РєРѕР»РёС‡РµСЃС‚РІРѕ РўРР РІ РіСЂСѓРїРїРµ
-//					AGroup         - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РјР°СЃСЃРёРІ РўРР
+//					Quan           - количество ТИИ в группе
+//					AGroup         - указатель на массив ТИИ
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //*************************************************************** 	IMPLEMENTED
@@ -2797,17 +2847,17 @@ TMC_IMPEX  short _STDCALL tmcSetAccumValue(DWORD cid, short Ch, short RTU, short
 												float Value,
 												const char *DateTime);
 //
-//	РћРџРРЎРђРќРР•:       Р·Р°РґР°РµС‚ Р·РЅР°С‡РµРЅРёРµ СЃС‡РµС‚С‡РёРєР° РўРР
+//	ОПИСАНИЕ:       задает значение счетчика ТИИ
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU, Point - СЃРј. РІС‹С€Рµ
-//					Value          - РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ СЃС‡РµС‚С‡РёРєР° (СЂРµР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ)
-//					DateTime       - РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ Р·Р°РїРёСЃРё РўРРў
-//									 РІ СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІСѓ РІ С„РѕСЂРјР°С‚Рµ "Р”Р”.РњРњ.Р“Р“ Р§Р§:РњРњ:РЎРЎ"
-//									 Р•СЃР»Рё Р·Р°РґР°РµС‚СЃСЏ РјРіРЅРѕРІРµРЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ, С‚Рѕ
-//									 СЃР»РµРґСѓРµС‚ РїРµСЂРµРґР°С‚СЊ DateTime = NULL
+//	ПАРАМЕТРЫ:      Ch, RTU, Point - см. выше
+//					Value          - новое значение счетчика (реальное число)
+//					DateTime       - опциональный параметр записи ТИТ
+//									 в ретроспективу в формате "ДД.ММ.ГГ ЧЧ:ММ:СС"
+//									 Если задается мгновенное значение, то
+//									 следует передать DateTime = NULL
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2816,43 +2866,49 @@ TMC_IMPEX  short _STDCALL tmcSetAccumFlags(DWORD cid, short Ch, short RTU, short
 TMC_IMPEX  short _STDCALL tmcClrAccumFlags(DWORD cid, short Ch, short RTU, short Point,
 												short Flags);
 //
-//	РћРџРРЎРђРќРР•:       РЈСЃС‚Р°РЅР°РІР»РёРІР°СЋС‚/СЃР±СЂР°СЃС‹РІР°СЋС‚ С„Р»Р°РіРё РѕР±СЉРµРєС‚Р° РўРР
-//					tmcSetAccumFlags - СѓСЃС‚Р°РЅРѕРІРєР°
-//					tmcClrAccumFlags - СЃР±СЂРѕСЃ
+//	ОПИСАНИЕ:       Устанавливают/сбрасывают флаги объекта ТИИ
+//					tmcSetAccumFlags - установка
+//					tmcClrAccumFlags - сброс
 //
-//	РџРђР РђРњР•РўР Р«:      Ch, RTU        - СЃРј. РІС‹С€Рµ
-//					Point          - N РѕР±СЉРµРєС‚Р° (СЃ 1), РµСЃР»Рё == 0 С‚Рѕ
-//									 РѕРїРµСЂР°С†РёСЏ РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ СЃРѕ РІСЃРµ
-//									 РѕР±СЉРµРєС‚Р°РјРё РґР°РЅРЅРѕРіРѕ Рљ
-//					Flags          - Р±РёС‚РѕРІР°СЏ РјР°СЃРєР° С„Р»Р°РіРѕРІ
+//	ПАРАМЕТРЫ:      Ch, RTU        - см. выше
+//					Point          - N объекта (с 1), если == 0 то
+//									 операция производится со все
+//									 объектами данного К
+//					Flags          - битовая маска флагов
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 
-/*--------------- Р–РЈР РќРђР› Р Р•Р“РРЎРўР РђР¦РР РЎРћР‘Р«РўРР™ ---------------------*/
+/*--------------- ЖУРНАЛ РЕГИСТРАЦИИ СОБЫТИЙ ---------------------*/
+
+//***************************************************************	IMPLEMENTED
+TMC_IMPEX  TEvent* _STDCALL tmcTmsEventConvert(TTMSEvent* tmse, DWORD tmse_size,PDWORD p_tev_size);
+// you have to free the result
+//***************************************************************	IMPLEMENTED
+
 
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX  short _STDCALL tmcRegEvent(DWORD cid, TEvent *tmEvent);
 //
-//	РћРџРРЎРђРќРР•:       СЂРµРіРёСЃС‚СЂР°С†РёСЏ СЃРѕР±С‹С‚РёСЏ РІ СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІРµ
+//	ОПИСАНИЕ:       регистрация события в ретроспективе
 //
-//	РџРђР РђРњР•РўР Р«:      tmEvent - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃ СЃРѕР±С‹С‚РёРµ
+//	ПАРАМЕТРЫ:      tmEvent - указатель на структуру с событие
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
 TMC_IMPEX  short  _STDCALL tmcRegEventRaw(DWORD cid, TTMSEvent *tmsEvent);
 //
-//	РћРџРРЎРђРќРР•:       СЂРµРіРёСЃС‚СЂР°С†РёСЏ СЃРѕР±С‹С‚РёСЏ РІ СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІРµ
+//	ОПИСАНИЕ:       регистрация события в ретроспективе
 //
-//	РџРђР РђРњР•РўР Р«:      tmsEvent - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃ СЃРѕР±С‹С‚РёРµ
+//	ПАРАМЕТРЫ:      tmsEvent - указатель на структуру с событие
 //
-//	Р’РћР—Р’Р РђРў:        SUCCESS - СѓСЃРїРµС…
-//					FAILURE - РѕС€РёР±РєР°
+//	ВОЗВРАТ:        SUCCESS - успех
+//					FAILURE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2861,7 +2917,7 @@ TMC_IMPEX  BOOL _STDCALL tmcEvlogPutStrBin(DWORD cid,
 		BYTE importance,DWORD SourceTag,
 		LPSTR str,PVOID bin,DWORD cb_bin);
 //
-//					FALSE - РѕС€РёР±РєР°
+//					FALSE - ошибка
 //***************************************************************
 
 //***************************************************************	IMPLEMENTED
@@ -2879,24 +2935,42 @@ TMC_IMPEX  short _STDCALL tmcEventLog(DWORD cid,
 										   short EvMask, TEvent *EvLog,
 										   short Cpct, DWORD *Cursor);
 //
-//	РћРџРРЎРђРќРР•:       Р’С‹Р±РѕСЂРєР° РґР°РЅРЅС‹С… РёР· Р¶СѓСЂРЅР°Р»Р° СЂРµРіРёСЃС‚СЂР°С†РёРё СЃРѕР±С‹С‚РёР№
+//	ОПИСАНИЕ:       Выборка данных из журнала регистрации событий
 //
-//	РџРђР РђРњР•РўР Р«:      StartTime   - РІСЂРµРјСЏ РЅР°С‡Р°Р»Р° РІС‹Р±РѕСЂРє
-//					EndTime     - РІСЂРµРјСЏ РєРѕРЅС†Р° РІС‹Р±РѕСЂРє
-//					EvMask      - РјР°СЃРєР° СЃРѕР±С‹С‚РёР№, РїРѕРїР°РґР°СЋС‰РёС… РІ РІС‹Р±РѕСЂРєСѓ
-//					EvLog       - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РјР°СЃСЃРёРІ СЃС‚СЂСѓРєС‚СѓСЂ РґР»СЏ
-//								  Р·Р°РЅРµСЃРµРЅРёСЏ РІС‹Р±СЂР°РЅС‹С… СЃРѕР±С‹С‚РёР№
-//					Cpct        - РєРѕР»РёС‡РµСЃС‚РІРѕ СЌР»РµРјРµРЅС‚РѕРІ СЌС‚РѕРіРѕ РјР°СЃСЃРёРІР°
-//					Cursor      - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃР»СѓР¶РµР±РЅСѓСЋ РїРµСЂРµРјРµРЅРЅСѓСЋ
-//								  С‚РµРєСѓС‰РµР№ РїРѕР·РёС†РёРё РІ Р¶СѓСЂРЅР°Р»Рµ. РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ
-//								  РґР»СЏ РїРѕСЂС†РёРѕРЅРЅРѕР№ РІС‹Р±РѕСЂРєРё РёР· СЂРµС‚СЂРѕСЃРїРµРєС‚РёРІС‹.
-//								  РџРµСЂРµРґ РїРµСЂРІС‹Рј РІС‹Р·РѕРІРѕРј *Cursor РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ 0L
-//								  РџСЂРё РЅРµС…РІР°С‚РєРµ РјРµСЃС‚Р° РІ РјР°СЃСЃРёРІРµ РґР»СЏ РІСЃРµС…
-//								  СЃРѕР±С‹С‚РёР№ *Cursor Р±СѓРґРµС‚ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ Рё РµРіРѕ
-//								  РЅРµ СЃР»РµРґСѓРµС‚ РјРµРЅСЏС‚СЊ РїСЂРё РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹С…
-//								  РІС‹Р·РѕРІР°С… РґРѕ РїРѕР»РЅРѕРіРѕ РїРѕР»СѓС‡РµРЅРёСЏ РІСЃРµС… СЃРѕР±С‹С‚РёР№
+//	ПАРАМЕТРЫ:      StartTime   - время начала выборк
+//					EndTime     - время конца выборк
+//					EvMask      - маска событий, попадающих в выборку
+//					EvLog       - указатель на массив структур для
+//								  занесения выбраных событий
+//					Cpct        - количество элементов этого массива
+//					Cursor      - указатель на служебную переменную
+//								  текущей позиции в журнале. Используется
+//								  для порционной выборки из ретроспективы.
+//								  Перед первым вызовом *Cursor должно быть 0L
+//								  При нехватке места в массиве для всех
+//								  событий *Cursor будет установлено и его
+//								  не следует менять при последовательных
+//								  вызовах до полного получения всех событий
 //
-//	Р’РћР—Р’Р РђРў:        РљРѕР»РёС‡РµСЃС‚РІРѕ СЃС‡РёС‚Р°РЅС‹С… СЃРѕР±С‹С‚РёР№
+//	ВОЗВРАТ:        Количество считаных событий
+//
+//
+//***************************************************************
+
+//***************************************************************	IMPLEMENTED
+
+TMC_IMPEX  short _STDCALL tmcEventLogTMA(DWORD cid, 
+						const LPSTR StartTime, 
+						const LPSTR EndTime,
+				        short EvMask, 
+						DWORD tma, 
+						TEvent *EvLog,
+				        short Cpct, 
+						DWORD *Cursor);
+
+//
+//
+//***************************************************************
 
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX TTMSEvent* _STDCALL tmcEventLogByIndex(DWORD cid,DWORD index,DWORD ut,PDWORD pSize);
@@ -2907,6 +2981,15 @@ TMC_IMPEX TEventEx* _STDCALL tmcEventLogEx(DWORD cid,WORD ev_mask,DWORD ux_start
 
 
 //****************************************************************		IMPLEMENTED
+TMC_IMPEX TEventElix* _STDCALL tmcEventLogByTimeEx2(
+	DWORD	cid,
+	DWORD	ux_start, 
+	DWORD	ux_end,
+	WORD	ev_mask,
+	DWORD	*Cursor
+);
+
+//****************************************************************		IMPLEMENTED
 TMC_IMPEX TEventElix* _STDCALL tmcEventLogByElix(
 	DWORD cid,
 	TTMSElix* pElix,
@@ -2914,7 +2997,23 @@ TMC_IMPEX TEventElix* _STDCALL tmcEventLogByElix(
 	DWORD ux_start,
 	DWORD ux_stop
 );
-
+//****************************************************************		IMPLEMENTED
+TMC_IMPEX TEventElix* _STDCALL tmcEventLogByElixEx2(
+	DWORD	cid,
+	TTMSElix*	elix,
+	WORD	EvMask,
+	DWORD	Start, 
+	DWORD	End
+);
+//****************************************************************		IMPLEMENTED
+TMC_IMPEX TEventElix* _STDCALL tmcEventLogByElixEx3(
+	DWORD	cid,
+	TTMSElix*	elix,
+	WORD	EvMask,
+	DWORD	Start, 
+	DWORD	End,
+	WORD	NotMoreThan
+);
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX BOOL _STDCALL tmcGetCurrentElix(
 	DWORD cid,
@@ -2936,7 +3035,16 @@ TMC_IMPEX BOOL	_STDCALL tmcEventLogAdditionalDataByElixList(
 	TTMSElix	*pElix,
 	DWORD		count
 );
-
+//****************************************************************		IMPLEMENTED
+TMC_IMPEX BOOL	_STDCALL tmcFindPrevElix(
+	DWORD cid,
+	TTMSElix* start_elix,
+	TTMSElix* prev_elix,
+	DWORD not_more_than,
+	DWORD not_before_ut,
+	WORD  not_before_ms,
+	WORD  ev_mask
+);
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX BOOL _STDCALL tmcEventLogAckRecords(
 	DWORD cid,
@@ -2984,12 +3092,12 @@ TMC_IMPEX void _STDCALL tmcTakeRetroTit(DWORD cid, short Ch, short RTU, short Po
 TMC_IMPEX TADRtm* _STDCALL tmcTakeAPS(DWORD cid);	// should free result with tmcFreeMemory
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX void _STDCALL tmcReadRetroTimes(DWORD cid, WORD idx,
-								PDWORD* ppdata,	// РЅСѓР¶РЅРѕ РѕСЃРІРѕР±РѕР¶РґР°С‚СЊ СЃ РїРѕРј. tmcFreeMemory()
+								PDWORD* ppdata,	// нужно освобождать с пом. tmcFreeMemory()
 								DWORD* pcount,LPSTR pError);
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX void _STDCALL tmcReadRetroSlice(DWORD cid,WORD idx,DWORD utime,
 								 WORD* ptype,
-								 PVOID* ppdata, // РЅСѓР¶РЅРѕ РѕСЃРІРѕР±РѕР¶РґР°С‚СЊ СЃ РїРѕРј. tmcFreeMemory()
+								 PVOID* ppdata, // нужно освобождать с пом. tmcFreeMemory()
 								 DWORD* pcount);
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX short _STDCALL tmcRetroInfo(DWORD cid, TRetroInfo *RetroInfo);
@@ -3015,8 +3123,8 @@ TMC_IMPEX DWORD _STDCALL tmcGetAlarm(
 	DWORD		cbAlarm,
 	LPSTR		*ppStrings
 );
-//РІРѕР·РІСЂР°С‰Р°РµС‚ 0 РїСЂРё РѕС€РёР±РєРµ РёР»Рё С‡РёСЃР»Рѕ Р±Р°Р№С‚
-//pStrings РЅСѓР¶РЅРѕ РѕСЃРІРѕР±РѕР¶РґР°С‚СЊ
+//возвращает 0 при ошибке или число байт
+//pStrings нужно освобождать
 //pStrings = "Expr=xxx""Name=xx""P1=xx""P2=xx"
 
 //****************************************************************		IMPLEMENTED
@@ -3064,7 +3172,7 @@ TMC_IMPEX BOOL _STDCALL tmcSetAlarm(
 	DWORD		cbAlarm,
 	LPSTR		pStrings
 );
-//РІРѕР·РІСЂР°С‰Р°РµС‚ FALSE РїСЂРё РѕС€РёР±РєРµ
+//возвращает FALSE при ошибке
 
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX BOOL _STDCALL tmcDownloadAlarms(DWORD	cid,LPSTR fname);
@@ -3079,17 +3187,17 @@ TMC_IMPEX BOOL _STDCALL  tmcAlertListRemove(DWORD cid, TAlertListId* list_id);
 TMC_IMPEX short _STDCALL tmcDriverCall(DWORD cid, DWORD ADR, short Q_Code, short Command );
 
 //****************************************************************		IMPLEMENTED
-TMC_IMPEX void  _STDCALL tmcStatusByList(DWORD cid, short Quan, TADRtm *List, TStatusPoint *SPs);
+TMC_IMPEX void  _STDCALL tmcStatusByList(DWORD cid, WORD Quan, TADRtm *List, TStatusPoint *SPs);
 
 //****************************************************************		IMPLEMENTED
-TMC_IMPEX void _STDCALL tmcStatusByListEx(DWORD cid, short Quan, TADRtm *ADRs, TStatusPoint *SPs,DWORD Time);
+TMC_IMPEX void _STDCALL tmcStatusByListEx(DWORD cid, WORD Quan, TADRtm *ADRs, TStatusPoint *SPs,DWORD Time);
 
 //****************************************************************		IMPLEMENTED
-TMC_IMPEX void  _STDCALL tmcAnalogByList(DWORD cid, short Quan, TADRtm *List, TAnalogPoint *APs,
+TMC_IMPEX void  _STDCALL tmcAnalogByList(DWORD cid, WORD Quan, TADRtm *List, TAnalogPoint *APs,
                                DWORD Time, short RetroNum);
 
 //****************************************************************		IMPLEMENTED
-TMC_IMPEX void  _STDCALL tmcAccumByList (DWORD cid, short Quan, TADRtm *List, TAccumPoint *AcPs,
+TMC_IMPEX void  _STDCALL tmcAccumByList (DWORD cid, WORD Quan, TADRtm *List, TAccumPoint *AcPs,
                                DWORD Time);
 //****************************************************************		IMPLEMENTED
 TMC_IMPEX LPSTR _STDCALL tmcGetTextualInfo(DWORD cid,WORD info,PBYTE data,DWORD cbdata);
@@ -3171,6 +3279,8 @@ TMC_IMPEX LPSTR _STDCALL tmcTechObjReplReadLog(
 
 TMC_IMPEX BOOL	_STDCALL tmcPubPublish(DWORD cid,LPSTR name, DWORD life_time, BYTE qos, PBYTE p_data, DWORD cb_data);
 
+TMC_IMPEX BOOL	_STDCALL tmcPubPublishEx(DWORD cid,LPSTR name, DWORD life_time, BYTE qos, PBYTE p_data, DWORD cb_data, LPSTR add_list);
+
 TMC_IMPEX BOOL	_STDCALL tmcPubSubscribe(DWORD cid,LPSTR name,DWORD subs_id,BYTE qos);
 
 TMC_IMPEX BOOL	_STDCALL tmcPubAck(DWORD cid,LPSTR name,DWORD subs_id,BYTE qos,DWORD user_id,PVOID ack_data, DWORD cb_ack_data);
@@ -3193,6 +3303,19 @@ TMC_IMPEX BOOL _STDCALL tmcPubParseDatagram(
 	PBYTE	p_qos,				//out
 	PBOOL	p_retained,			//out, can be NULL
 	PBYTE	p_pub_flg			//out, can be NULL
+);
+
+TMC_IMPEX BOOL  _STDCALL tmcPubParseDatagramEx(
+	PBYTE	p_dgram,
+	DWORD	cb_dgram,
+	LPSTR	*p_tag,
+	PBYTE	*pp_data,
+	PDWORD	p_cb_data,
+	PDWORD	p_subs_id,
+	PBYTE	p_qos,
+	PBOOL	p_retained,
+	PBYTE	p_pub_flg,
+	LPSTR	*pp_raw_header	//out, can be NULL
 );
 
 //****************************************************************
@@ -3356,14 +3479,14 @@ TMC_IMPEX VOID	_STDCALL tcapFreeMemory(PVOID p);
 //////////////////////////////////////////////////////////////////
 ///////////////////// RBASE CONSTANTS AND FUNCTIONS
 
-/*------------------ РљРѕРЅСЃС‚Р°РЅС‚С‹ РєРѕРґРѕРІ РѕС€РёР±РѕРє -----------------------*/
+/*------------------ Константы кодов ошибок -----------------------*/
 #define GL_OK         0
 #define GL_BLOK       1
 #define GL_ERROR_DISK 2
 #define GL_ERROR_LINE 3
 #define GL_FAULT      4
 
-/*--------------- РљРѕРЅСЃС‚Р°РЅС‚С‹ РґР»СЏ СЃРµС‚РµРІРѕРіРѕ РґРѕСЃС‚СѓРїР° ------------------*/
+/*--------------- Константы для сетевого доступа ------------------*/
 #define rbSYSTEM_DATE        1
 #define rbINIT_BASE          9
 #define rbUNBLOK_BASE       12
@@ -3406,22 +3529,22 @@ TMC_IMPEX VOID	_STDCALL tcapFreeMemory(PVOID p);
 #define MAX_BASES MAXBASE
 #define MAXTAB  30
 
-/*---------------------- РњРѕРґРёС„РёРєР°С‚РѕСЂС‹  ------------------------*/
-#define GBLOK     0x1000    // Р§С‚РµРЅРёРµ СЃ Р±Р»РѕРєРёСЂРѕРІРєРѕР№
+/*---------------------- Модификаторы  ------------------------*/
+#define GBLOK     0x1000    // Чтение с блокировкой
 #define GUNBLOK   0x1000
-#define ADD_MAX   0x1000    // Р”Р»СЏ FindMinMax - СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ РЅРѕРјРµСЂР°
-#define ADD_MIN   0x2000    // Р”Р»СЏ FindMinMax - СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ РЅРѕРјРµСЂР°
-#define REVERSE   0x4000    // Р§С‚РµРЅРёРµ РІ РѕР±СЂР°С‚РЅРѕРј РЅР°РїСЂР°РІР»РµРЅ
+#define ADD_MAX   0x1000    // Для FindMinMax - резервирование номера
+#define ADD_MIN   0x2000    // Для FindMinMax - резервирование номера
+#define REVERSE   0x4000    // Чтение в обратном направлен
 
-/*------------------- РљРѕРЅСЃС‚Р°РЅС‚С‹ СѓСЃР»РѕРІРёР№ -----------------------*/
-#define _LIKE_     1        // РўРµРєСЃС‚РѕРІС‹Рµ РїРѕР»СЏ
-#define _LE_       2        // РњРµРЅСЊС€Рµ РёР»Рё СЂР°РІРЅРѕ
-#define _LT_       3        // РњРµРЅСЊС€Рµ
-#define _GE_       4        // Р‘РѕР»СЊС€Рµ РёР»Рё СЂР°РІРЅРѕ
-#define _GT_       5        // Р‘РѕР»СЊС€Рµ
-#define _EQ_       6        // Р Р°РІРЅРѕ
-#define _BETWEEN_  8        // Р’ РґРёР°РїР°Р·РѕРЅРµ
-#define _NULL_     7        // РќРµС‚ Р·РЅР°С‡РµРЅРёСЏ
+/*------------------- Константы условий -----------------------*/
+#define _LIKE_     1        // Текстовые поля
+#define _LE_       2        // Меньше или равно
+#define _LT_       3        // Меньше
+#define _GE_       4        // Больше или равно
+#define _GT_       5        // Больше
+#define _EQ_       6        // Равно
+#define _BETWEEN_  8        // В диапазоне
+#define _NULL_     7        // Нет значения
 
 TMC_IMPEX int	_CDECL rbcOpenBases		(DWORD cid,/*char *BaseName,*/ ...);
 TMC_IMPEX void	_CDECL rbcCloseBases	(DWORD cid);
@@ -3487,6 +3610,10 @@ TMC_IMPEX BOOL	_CDECL	rbcIpgStopRedirector( DWORD cid,WORD portidx);
 #endif
 ///////////////////////// INTERNAL
 TMC_IMPEX DWORD _STDCALL tmcGetCurrentXaction(DWORD cid);
+
+#ifdef IF_PORTCORE
+DWORD tmcGetQBufSize(DWORD cid);
+#endif
 
 #ifdef __cplusplus
 }

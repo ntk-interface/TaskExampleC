@@ -14,6 +14,10 @@ VOID cfsTestFn();
 #define CFT_HANDLE	PVOID
 #define CFT_ZERO	NULL
 
+#define	MEGABYTE		0x100000
+#define GIGABYTE		0x40000000
+
+
 #define	IF_LDOUBLE	double
 
 /////////////////		for non-windows environment
@@ -27,6 +31,7 @@ VOID cfsTestFn();
 #define REG_DWORD                   ( 4 )   // 32-bit number
 #define REG_LINK                    ( 6 )   // Symbolic Link (unicode)
 #define REG_MULTI_SZ                ( 7 )   // Multiple Unicode strings
+
 
 #endif // REG_NONE
 
@@ -65,7 +70,6 @@ typedef struct _CFS_PTHS{
 	PVOID	dpc_port;
 	// ext_pc
 	BYTE	b_supp_ex_checks;	//this thread shouldn't check execution dir
-
 #endif
 
 	PVOID	tmconn_thd;	//TMCONN THREAD DATA
@@ -214,7 +218,18 @@ typedef struct {
 	DWORD AccountDomainError;
 	WORD AccountDomainName[DIS_NAME_LEN];
 	BYTE  AccountDomainSid[100];
-}DOMAIN_INFO_S;
+}DOMAIN_INFO_S; //size 608
+
+typedef struct {
+	CHAR	Zero[5];
+	CHAR	AddInfoTxt[100];
+}COMPUTER_INFO_v3;
+
+typedef union {
+	DOMAIN_INFO_S		DomainInfo;
+	COMPUTER_INFO_v3	AddInfo;
+}DOMAIN_INFO_U;
+
 #pragma pack()
 
 #define NTPT_NOTDEF				0
@@ -258,12 +273,15 @@ typedef struct {
 	BYTE				_reserved[3];
 	DWORD				CfsVerMaj;
 	DWORD				CfsVerMin;
-	DOMAIN_INFO_S		DomInfo;
+	DOMAIN_INFO_U		DomInfo;
 	CHAR				UserName[64];
-	CHAR				_res2[64];
+	DWORD				InternalUT;
+	WORD				InternalMs;
+	DWORD				LocalUT;
+	WORD				LocalMs;
+	CHAR				_res2[52];
 	CHAR				UserAddr[64];
-	DWORD				UserIfIp;
-	CHAR				_res3[28];
+	CHAR				_res3[32];
 	DWORD				IpAddrs[8];
 	DWORD				AccessMask;
 }COMPUTER_INFO_S;
@@ -281,6 +299,7 @@ VOID		cfsDeinitLibrary();
 PVOID*		cfsGetThreadLocks();
 LPSTR		cfsDoThreadListEnum(PVOID pinst);
 VOID		cfsGetThreadTiming(CFS_PTHS* pths,LPSTR times, DWORD cb_times);
+u64			cfsGetThreadTimingMcs(CFS_PTHS* pths);
 
 
 PVOID	_calltype_	cfsAllocMemory(DWORD dw);
@@ -384,8 +403,10 @@ extern	int		IF_COMPRESS_XACT;
 extern	BYTE	Cfs_Unique[16];
 extern	DWORD	Cfs_UniqueCrc;
 extern	BOOLEAN	Cfs_UniqueChanged;
+extern	BYTE	Cfs_HwUnique;
 extern	BYTE	Cfs_UniqueGenSec;
-extern BOOL		Cfs_System_Stateless;
+extern	BOOL	Cfs_System_Stateless;
+extern	CHAR	Cfs_ProductAdd[128];
 #define	OsGetWkstaUniquePtr()	Cfs_Unique
 #define	OsGetFileChangeTime		cfsGetFileChangeTime
 #else
@@ -447,8 +468,6 @@ BOOL cfsCopyDir(LPSTR src,LPSTR dst, BOOL b_move);
 VOID	cfsExpandPassword(LPSTR buf,DWORD cb_buf);
 
 
-
-
 VOID	cfsLockInit();
 PVOID	cfsLockFile(LPSTR fname,DWORD to);
 PVOID	cfsUnlockFile(LPSTR fname,BOOL fTotal);
@@ -499,6 +518,7 @@ PVOID	cfslogCopyCreate();
 VOID	cfslogCopyReset(PVOID pvlf);
 BOOL	cfslogCopyGetString(PVOID pvlf,LPSTR buf,PDWORD pcb);
 BOOL	cfslogCopyGetStringPos(PVOID pvlf,LPSTR buf,PDWORD pcb,PDWORD p_pos);
+BOOL	cfslogCopyGetStringEx(PVOID pvlf,LPSTR buf,PDWORD pcb,PBOOL pOutOfBuffer);
 DWORD	cfslogCopy(LPSTR name,LPSTR fullname,DWORD cb_fullname);
 BOOL	cfslogSetHook(CFS_LOGHOOK hook, PVOID parm, BOOL b_set);
 
@@ -531,6 +551,7 @@ VOID	strac_SetConsoleDebug(BOOL fDebug);
 BOOL	strac_AllocServer(TRACE_ITEM_STORAGE* tis,DWORD pid,DWORD ppid,LPSTR name,LPSTR comment);
 BOOL	strac_AllocUser(TRACE_ITEM_STORAGE* tis,DWORD pid,LPSTR name,LPSTR comment,PVOID pu);	//should be called in the context of user thread
 VOID	strac_FreeUser(TRACE_ITEM_STORAGE* tis);
+BOOL	strac_HasChildren(DWORD psuid);
 VOID	strac_FreeServer(TRACE_ITEM_STORAGE* tis);
 VOID	strac_SetUserComment(TRACE_ITEM_STORAGE* tis,LPSTR comment);
 BOOL	strac_ServerNameBySuid(DWORD suid_proc,LPSTR sn,DWORD cb);
@@ -609,6 +630,10 @@ VOID	cfsWatcherDone();
 VOID	uxt_attach();
 VOID	uxt_detach();
 
+DWORD uxtime_internal(PWORD pms);
+DWORD uxgmtime_internal(PWORD pms);
+VOID  uxtime_set_internal(DWORD gt,DWORD ms);
+VOID  uxtime_correct_internal(DWORD gt,DWORD ms);
 DWORD uxgmtime();
 DWORD uxgmtime_h(PBYTE pHund);
 DWORD uxgmtime_ms(PWORD pMS);
@@ -647,6 +672,8 @@ DWORD	ux_tz_change();
 BOOL	ux_tz_by_name(LPSTR tzname,TIME_ZONE_INFORMATION* tzip,PBOOL pGw);
 
 BOOL	cfsGetExactSystemTime(SYSTEMTIME* pst);
+BOOL	cfsGetInternalSystemTime(SYSTEMTIME* pst);
+
 
 BOOL	_calltype_	cfsCopyFile( LPSTR lpExistingFileName, LPSTR lpNewFileName, BOOL bFailIfExists);
 BOOL	_calltype_	cfsMoveFile( LPSTR lpExistingFileName, LPSTR lpNewFileName, BOOL bReplaceExisting);
@@ -689,6 +716,10 @@ VOID	_calltype_ cfsChangeThreadName(LPSTR name);
 #endif
 
 ///////////////////// pkf files
+
+#define PKFF_ADD				0x00000001
+#define PKFF_DEL_ADDED			0x00000002
+
 typedef BOOL (* pfkProgressFn)(LPSTR pkf_name,LPSTR file_name, DWORD fidx, u64 total_size, u64 total_pos, u64 file_size, u64 file_pos, PVOID prog_parm);
 
 BOOL	_calltype_  pkfPack(LPSTR pkfname,LPSTR fnames,LPSTR errs,DWORD errlen);
@@ -696,12 +727,16 @@ BOOL	_calltype_	pkfPackProgress(LPSTR pkfname,LPSTR fnames,LPSTR errs,DWORD errl
 BOOL	_calltype_  pkfPackAdd(LPSTR pkfname,LPSTR fnames,LPSTR errs,DWORD errlen);
 LPSTR	_calltype_  pkfUnPack(LPSTR pkfname,LPSTR dirname,LPSTR errs,DWORD errlen);
 LPSTR	_calltype_  pkfEnumPackedFiles(LPSTR pkfname,LPSTR errs,DWORD errlen);
+LPSTR	_calltype_  pkfEnumPackedFilesEx(LPSTR pkfname,LPSTR errs,DWORD errlen);
 BOOL	_calltype_  pkfExtractFile(LPSTR pkfname,LPSTR fname, LPSTR dirname,LPSTR errs,DWORD errlen);
+BOOL	_calltype_	pkfDoPack(LPSTR pkfname,LPSTR fnames,LPSTR errs,DWORD errlen,BYTE xor_char,DWORD flags,LPSTR pwd, pfkProgressFn prog, PVOID prog_parm);
 
 BOOL	_calltype_  pkfPack_Pwd(LPSTR pkfname,LPSTR fnames,LPSTR errs,DWORD errlen,LPSTR pwd);
 BOOL	_calltype_  pkfPackAdd_Pwd(LPSTR pkfname,LPSTR fnames,LPSTR errs,DWORD errlen,LPSTR pwd);
 LPSTR	_calltype_  pkfUnPack_Pwd(LPSTR pkfname,LPSTR dirname,LPSTR errs,DWORD errlen,LPSTR pwd);
 BOOL	_calltype_  pkfExtractFile_Pwd(LPSTR pkfname,LPSTR fname, LPSTR dirname,LPSTR errs,DWORD errlen,LPSTR pwd);
+BOOL	_calltype_	pkfPackDir(LPSTR data_path,LPSTR arch_path,LPSTR temp_path,DWORD level,LPSTR file_excl_list,u64* p_usize,LPSTR errs,DWORD errlen);
+BOOL	_calltype_	pkfUnpackDir(LPSTR data_path,LPSTR arch_path,DWORD level,LPSTR errs,DWORD errlen);
 
 VOID	_calltype_	pkfFreeMemory(PVOID p);
 
@@ -804,8 +839,13 @@ LPWSTR	pR_strncpyW(LPWSTR dest, const LPWSTR src, DWORD count);
 DWORD	pR_strlenW(const LPWSTR str);
 LPWSTR	pR_strcatW(LPWSTR	dest, const LPWSTR src);
 
-BOOL	pR_CheckForFileExistance(const LPSTR fn);
+BOOL	pR_CheckForFileExistence(const LPSTR fn);
 INT		pR_getchar();
+
+#ifdef	IF_PORTCORE
+VOID	pR_GetLocalTime(  LPSYSTEMTIME lpSystemTime );
+VOID	pR_GetSystemTime(  LPSYSTEMTIME lpSystemTime );
+#endif
 
 #define pR_sscanf	sscanf
 
@@ -839,6 +879,7 @@ DWORD			tscGetExactUT(PWORD pms);
 DWORD	cfs_allocptrid(PVOID ptr);
 BOOL	cfs_freeptrid(DWORD ptrid);
 PVOID	cfs_ptrid(DWORD ptrid);
+DWORD	cfs_ptrid_cnt();
 #endif
 
 /////////////////////// misc
@@ -893,7 +934,11 @@ typedef struct {
 	CHAR	fname_or_error[1024];
 }TCfsServerBackupData;
 
+#ifndef CFSHARE_DLL
 DWORD cfsGetVersion();
+#else
+DWORD __stdcall cfsGetVersion();
+#endif
 
 ////////////////////	connection oriented
 
@@ -983,6 +1028,10 @@ BOOL	cfsFilePutEx(PVOID connid,LPSTR remote_fname,LPSTR local_fname,DWORD timeou
 			cfsProgressFn pfn,LPVOID pfn_parm,
 			LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
+BOOL	cfsFilePutMem(CID_HANDLE connid,LPSTR remote_fname,PBYTE data,DWORD cb_data, DWORD timeout,
+			cfsProgressFn pfn,LPVOID pfn_parm,
+			LPDWORD perr,LPSTR err_string,DWORD maxerrs);
+
 BOOL	cfsFileGet(	PVOID connid,	LPSTR remote_fname,		LPSTR local_fname,	DWORD timeout,PFILETIME pft,
 			LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
@@ -1027,6 +1076,8 @@ BOOL	cfsLogClose(PVOID connid, 	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 LPSTR	cfsLogCopy(PVOID connid, 	LPSTR name,	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
 LPSTR	cfsLogGetRecord(PVOID connid,BOOL fFirst,LPDWORD perr,LPSTR err_string,DWORD maxerrs);
+LPSTR	cfsLogGetRecordEx(PVOID connid,BOOL fFirst,	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
+
 
 BOOL	cfsLogClear(PVOID connid,LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
@@ -1055,6 +1106,8 @@ BOOL	cfsGetIniString(PVOID connid,LPSTR path,LPSTR section,LPSTR key,LPSTR def,L
 
 BOOL	cfsSetIniString(PVOID connid,LPSTR path,LPSTR section,LPSTR key,LPSTR value,
 			LPDWORD perr,LPSTR err_string,DWORD maxerrs);
+
+DWORD	cfsGetHDK(PVOID connid,PBYTE pk /*64 bytes*/);
 
 BOOL	cfsIpgGetPort(CID_HANDLE connid,LPSTR oname,DWORD portidx,PDWORD p_port,LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
@@ -1156,6 +1209,10 @@ BOOL	cfsIfpcBackupSecurity(CID_HANDLE connid,LPSTR snp,LPSTR pwd,LPSTR filename,
 BOOL	cfsIfpcRestoreSecurity(CID_HANDLE connid,LPSTR snp,LPSTR pwd,LPSTR filename,
 			LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
+BOOL cfsIfpcSetAbkParms(CID_HANDLE connid, LPSTR pwd,
+	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
+
+
 BOOL	cfsIfpcUDBFileTime(PVOID connid,FILETIME* ft,
 			LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
@@ -1177,7 +1234,13 @@ BOOL cfsIfpcTestTmcalc(PVOID connid,LPSTR tmsname,LPSTR clcname,DWORD test_way,D
 BOOL cfsIfpcStopTestTmcalc(PVOID connid, u64 handle, DWORD pid,
 	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
-BOOL cfsSwapFnSrvRole(LPSTR serverName, BOOL b_pre, LPSTR fns_name,LPDWORD perr,LPSTR err_string,DWORD maxerrs );
+BOOL cfsIsReserveWorking(
+	CID_HANDLE connid,	DWORD IpAddr, 
+	WORD IpBCPort,	WORD IpPort,	DWORD SType,
+	PBOOL pWorking, LPSTR SName, /*64*/
+	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
+
+BOOL cfsSwapFnSrvRole(LPSTR machine_name, BOOL b_pre, LPSTR fns_name,LPDWORD perr,LPSTR err_string,DWORD maxerrs );
 
 BYTE	cfsGetHostSecurityType(PVOID connid);
 
@@ -1254,6 +1317,19 @@ LPSTR lf_ParseMessage(LPSTR s,LPSTR sTime,LPSTR sDate,LPSTR sName,LPSTR sType,LP
 
 BOOL cfsSaveMachineConfig(BOOL fFull,LPSTR RemoteMasterMachine,LPSTR FileName,LPSTR errs,DWORD cb_errs);
 
+BOOL cfsSaveCfImage(
+	BOOL			fFull,
+	DWORD			tmsBFlags,
+	DWORD			rbsBFlags,
+	LPSTR			RemoteMasterMachine,
+	LPSTR			FileName,
+	cfsBackupProgressFn	pfn,
+	PVOID			pfn_parm,
+	LPSTR			errs,
+	DWORD			cb_errs
+);
+
+
 BOOL cfsPrepNewConfig(PVOID connid,LPSTR remote_fname,
 	LPDWORD perr,LPSTR err_string,DWORD maxerrs);
 
@@ -1271,10 +1347,33 @@ BOOL cfsSaveMachineConfigEx(
 	DWORD			cb_errs
 );
 
+BOOL cfsPreBackupEstimate(
+	LPSTR			RemoteMasterMachine,
+	LPSTR			FileName,
+	DWORD			dwScope,
+	u64*			remote_size,
+	u64*			remote_free_space,
+	u64*			local_free_space,
+	PDWORD			perr,
+	LPSTR			err_string,
+	DWORD			cb_errs
+);
 LPSTR cfsGetIfllKey();
+
+BOOL	cfsPrintSrvString(LPSTR s,LPSTR buf, DWORD cb_buf);
 
 typedef BOOL ( *i850CfProgress)(PVOID parm,LPSTR txt,BOOL err);
 BOOL cfsI850GetConfig(CFT_HANDLE tid, LPSTR proto_parms, LPSTR addrs, LPSTR filename, i850CfProgress prog, PVOID prog_parm);
+
+BOOL  cfsI850GetRemoteConfig(
+	CID_HANDLE connid,
+	LPSTR addrs,
+	LPSTR proto_parms,
+	LPSTR local_filename,
+	PDWORD			perr,
+	LPSTR			err_string,
+	DWORD			max_errs
+);
 
 #ifdef IF_PORTCORE
 
@@ -1305,12 +1404,12 @@ VOID	cfsCorrectAccessMask(PDWORD pdwAccessMask,LPSTR rbuf,LPSTR oname);
 INT		cfsGetVirt(void);
 VOID	cfsGetOsVersionString(LPSTR vers,DWORD cb_vers);
 
-BOOL cfsCprtText(DWORD id,LPSTR tmpbuf,DWORD cb_tmpbuf);
+BOOL	cfsCprtText(DWORD id,LPSTR tmpbuf,DWORD cb_tmpbuf);
 
-LPSTR cfsGetDataPathAlt();
-LPSTR cfsGetMainPathAlt();
+LPSTR	cfsGetDataPathAlt();
+LPSTR	cfsGetMainPathAlt();
 
-VOID  cfsCreateIfllKey();
+VOID	cfsCreateIfllKey();
 
 PTRUINT TmcalcRunTest(
 	PDWORD	pChildPid,

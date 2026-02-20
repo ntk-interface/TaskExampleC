@@ -106,8 +106,11 @@ INT		featGetValue(DWORD Feat,PDWORD pValue);
 VOID	featSetCallback(PVOID cback,PVOID pinst,BOOL f_set);
 LPSTR	cfsGetFeatReport();
 PDWORD	_CDECL cfsFeatGetPs();
+VOID	featGetBid(PBYTE b_id);
 
-
+#ifdef CFSHARE_DLL
+extern PBYTE Cfs_Unique;
+#endif
 
 DWORD	keyGetPort		();
 PVOID	keyOpenPort		();
@@ -115,6 +118,8 @@ BOOL	keyReadId		(PVOID	KeyPort,PBYTE id);
 BOOL	keyReadSubkey	(PVOID	KeyPort,BYTE block,	PBYTE pwd,PBYTE id,PBYTE data);
 VOID	keyClosePort	(PVOID	KeyPort);
 BOOL	keyReactivateKey(BOOL fCheck);
+BOOL	keyIsNonInteractive(PVOID	KeyPort);
+
 LPSTR	_STDCALL	_keyGetParms();
 DWORD	_STDCALL	_keyGetReadSeqNum();
 VOID	_STDCALL	_keySaveReadSeqNum(DWORD rsn);
@@ -156,8 +161,11 @@ BOOL ifpcEqualSid(PVOID psid1,PVOID psid2);
 CFS_INIT_DATA*	cfsInitApp();
 LPSTR	cfsMakeInprocCrd(LPSTR machine, LPSTR user, LPSTR pwd);
 BOOL	cfsDecInprocCrd(LPSTR crd,LPSTR machine,LPSTR user,LPSTR pwd);
+LPSTR	cfsGetMasterLocation();
+LPSTR	cfsLocationAddStr(LPSTR buf, DWORD cb_buf);
+BOOL	ntabGetName(DWORD idx,LPSTR Buf,DWORD cbBuf);
 
-BOOL  ntabGetName(DWORD idx,LPSTR Buf,DWORD cbBuf);
+extern CFS_SECURE_POINTERS cfs_SECURE_POINTERS;
 
 ////// INI
 #define		INI_OPENEX_CACHE	0x100

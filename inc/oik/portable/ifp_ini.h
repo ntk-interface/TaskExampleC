@@ -8,6 +8,11 @@ extern "C" {
 #define CFS_INI_COMMIT	1
 #define CFS_INI_RELOAD	2
 
+#define	INI_ENC_ND			1
+#define	INI_ENC_GOST3412	2
+#define	INI_ENC_MAX			2
+
+
 /////////////////
 #if INI_SYSTEM
 #define pR_IniFilesInit(x)					TRUE
@@ -89,9 +94,10 @@ CFS_EXPORT	BOOL	_calltype_ ini_WriteStruct(PVOID pf,LPSTR sec,LPSTR str,PVOID St
 CFS_EXPORT	VOID	_calltype_ ini_EraseSection(PVOID pf,LPSTR sec);
 CFS_EXPORT	BOOL	_calltype_ ini_ChangeEnc(PVOID pf, LPSTR name, BYTE en_t, PBYTE en_k);
 
+
 #ifndef USE_CFSHARE_DLL
 #define	cfsGetConfDword		cfsPrivateDword
-//#define	cfsGetConfDwordEx	cfsPrivateDwordEx
+DWORD cfsGetConfDwordEx(LPSTR fns,LPSTR sec,LPSTR key,DWORD def);
 #endif
 
 #ifdef __cplusplus

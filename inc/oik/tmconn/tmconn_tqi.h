@@ -99,6 +99,8 @@ typedef enum tqiFieldId
 	TQI_FIELD_TS_Cl_FLC_Text1,	//string
 	TQI_FIELD_TS_Cl_FLD_Text0,	//string
 	TQI_FIELD_TS_Cl_FLD_Text1,	//string
+	TQI_FIELD_TS_Cl_CtlTextOn,	//string
+	TQI_FIELD_TS_Cl_CtlTextOff,	//string
 
 	/* specific to TT */
 	TQI_FIELD_TT_start			=300,
@@ -181,6 +183,8 @@ typedef enum tqiFieldId
 	TQI_FIELD_EVLOG_AckUser,	//string
 	TQI_FIELD_EVLOG_Importance,	//byte
 	TQI_FIELD_EVLOG_OldFlags,	//dword
+	TQI_FIELD_EVLOG_HwTime,		//uxtime (millisec64)
+	TQI_FIELD_EVLOG_CompTime,	//uxtime (millisec64)
 
 	/* specific to RETRO list*/
 	/* no common fields */
