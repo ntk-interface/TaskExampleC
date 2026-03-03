@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     // ./TaskExampleC сервер_динамических_данных компьютер имя_пользователя пароль
     // пример запуска: ./TaskExampleC TMS 127.0.0.1 user password
     // при запуске в качестве внешней задачи параметры указывать не надо
-    strcpy(server_host, "127.0.0.1");
+    strcpy(server_host, ".");
     strcpy(server_tm, "TMS");
     strcpy(server_username, "");
     strcpy(server_password, "");
@@ -56,6 +56,9 @@ int main(int argc, char *argv[]) {
     tmcSystemTime(tm_cid, server_time, NULL);
     if (tmcIsConnected(tm_cid) == 0) {
         e_printf("Не удалось соединиться с сервером\n");
+        char error_text[255];
+        tmcGetConnectErrorText(tm_cid, error_text, 255);
+        e_printf("%s\n", error_text);
         return (int) tmcGetLastError();
     }
     m_printf("Установлена связь с сервером\n");
